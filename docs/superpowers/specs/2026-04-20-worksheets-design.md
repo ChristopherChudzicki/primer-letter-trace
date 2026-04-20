@@ -29,6 +29,7 @@ Generate printable worksheets for a pre-K child (~3yr 11mo) to practice forming 
   - **Demo + blank**: one demo letter, rest of row is blank ruled space for copy.
 - Kindergarten-style three-line ruled paper (solid headline, dashed midline, solid baseline, descender space).
 - Paper size: US Letter default, A4 available.
+- Letter size: three presets — **Small** (~60pt, cap-height ≈ 0.625″), **Medium** (~75pt, cap-height ≈ 0.75″, default), **Large** (~95pt, cap-height ≈ 0.95″).
 - Light decorative theming: none / fairy / unicorn / princess. Manifests as ruled-line color, a small corner ornament (inline SVG), and an accent color. No external art assets.
 - Shareable URL: the full `SheetConfig` is encoded in query params.
 - Printing via the browser's native print dialog (Chrome print-to-PDF is the assumed primary output path).
@@ -41,7 +42,7 @@ Generate printable worksheets for a pre-K child (~3yr 11mo) to practice forming 
 - User-uploaded custom fonts.
 - Mixing row styles on a single page.
 - Saved sheets, favorites, or accounts.
-- Per-sheet letter size adjustment (a single tuned size is used).
+- Free-form numeric letter-size input (only the three presets are selectable in v1).
 
 ## 4. Technical stack
 
@@ -84,6 +85,7 @@ type SheetConfig = {
   content: string[]                          // parsed items, e.g. ["Aa", "Bb", "Cc"] or ["1","2","3"]
   layout: "single" | "multi"
   rowStyle: "combo" | "all-trace" | "demo-blank"
+  size: "small" | "medium" | "large"         // maps to font-size and, via font metrics, to all ruled-line spacing
   theme: "none" | "fairy" | "unicorn" | "princess"
   paperSize: "letter" | "a4"
 }
@@ -121,7 +123,7 @@ One printable page. One row per *character* in each item.
 
 - Input `content: ["Aa", "Bb", "Cc"]` → 6 rows: `A`, `a`, `B`, `b`, `C`, `c`.
 - Each row uses the chosen `rowStyle`.
-- The page fits as many rows as vertically possible at the tuned letter size. If content exceeds one page, continue on subsequent pages.
+- The page fits as many rows as vertically possible at the selected letter size. If content exceeds one page, continue on subsequent pages.
 
 ### Single-item-per-page layout
 
@@ -158,7 +160,7 @@ All corner ornaments are simple vector shapes authored inline. Theme applies at 
 `SheetConfig` is serialized into URL query params on every UI change so the current URL always reproduces the current sheet. Format:
 
 ```
-?content=Aa+Bb+Cc&layout=multi&row=combo&theme=fairy&paper=letter
+?content=Aa+Bb+Cc&layout=multi&row=combo&size=medium&theme=fairy&paper=letter
 ```
 
 Encoding is symmetric: on page load, the URL is parsed into a `SheetConfig` that initializes the form. This gives shareability for free — copy URL, send to someone, they see the identical sheet.
@@ -171,7 +173,8 @@ Encoding is symmetric: on page load, the URL is parsed into a `SheetConfig` that
   - Glyph path generation for A-Z, a-z, 0-9 (verify each returns a non-empty SVG path).
   - Text input parsing (space splitting, whitespace trimming, empty input).
 - **Visual regression** (Playwright screenshot tests)
-  - One snapshot per combination of `(layout, rowStyle, theme)` = 2 × 3 × 4 = 24 snapshots, using a fixed sample content string.
+  - One snapshot per combination of `(layout, rowStyle, theme)` at the default size = 2 × 3 × 4 = 24 snapshots, using a fixed sample content string.
+  - Plus a size-sweep: default `(layout, rowStyle, theme)` × 3 sizes = 3 extra snapshots to catch size-related layout regressions without exploding the grid.
 - **Print validation**
   - Automated PDF-diff is out of scope for v1.
   - README includes a manual checklist: print one sheet per layout on real paper, verify letter sizing, ruled-line alignment, no clipped content, correct paper size.
