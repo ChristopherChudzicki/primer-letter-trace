@@ -1,15 +1,28 @@
 # primer-letter-trace
 
-A static web app that generates printable letter, number, and handwriting practice sheets for young learners. Built with TypeScript + Vite; no framework.
+Printable letter, number, and handwriting practice sheets for young learners.
 
-## Quick start
+**→ Use it now: https://christopherchudzicki.github.io/primer-letter-trace/**
 
-```bash
-npm install
-npm run dev
-```
+Pick letters, words, or digits; choose a row style (demo + trace + copy, trace only, or demo + copy); tune letter size and paper; click **Print**. Every change is reflected in the URL, so any sheet you like can be shared just by copying the link.
 
-Open the URL Vite prints. The form on the left controls the sheet; the preview on the right updates live. Click **Print** (or Cmd-P / Ctrl-P) to open the browser print dialog.
+## How to use it
+
+1. Type what you want practiced in the **Content** box — one item per line. Examples:
+   - `A` then `a` then `B` then `b`… for alphabet practice
+   - `CAT`, `BAT` for word practice
+   - `123` or `1` `2` `3` for digits
+   - A blank line produces a blank ruled row
+2. Use the **A–Z**, **a–z**, **Aa–Zz**, **0–9** preset buttons if you want the whole alphabet quickly.
+3. Pick a **Page layout**:
+   - *Multiple items per page* — packs many rows on one sheet
+   - *One item per page* — big header + rows of practice for a single letter/word
+4. Pick a **Row style**:
+   - *Combo* — model letter + 2 trace letters + blank copy space
+   - *Trace + blank* — a row of trace letters (fills the row with as many as fit)
+   - *Demo + blank* — one model letter, rest is blank ruled space
+5. Adjust **Letter size**, **Theme**, **Paper size** to taste.
+6. Click **Print**. See "Printing tips" below for cleanest output.
 
 ## Printing tips
 
@@ -46,6 +59,15 @@ Trace letters use pre-computed **skeletons** — single-stroke centerlines extra
 See `docs/superpowers/specs/2026-04-20-worksheets-design.md` for the full design spec, and `docs/superpowers/plans/2026-04-20-worksheets.md` for the implementation plan.
 
 ## Development
+
+Run it locally:
+
+```bash
+npm install
+npm run dev
+```
+
+Open the URL Vite prints. The form on the left controls the sheet; the preview on the right updates live.
 
 ### Project layout
 
