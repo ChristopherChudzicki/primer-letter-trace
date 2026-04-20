@@ -2,9 +2,15 @@ import type { FontAsset } from "../rendering/font";
 import { glyphPath } from "../rendering/glyph";
 import { computeLines, CAP_HEIGHT_PX } from "../rendering/ruled-lines";
 import type { RowStyle, Size } from "../config/types";
+import ANDIKA_SKELETONS from "../rendering/skeletons/andika";
+import type { SkeletonSet } from "../rendering/skeletons/types";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const LETTER_GAP_EM = 0.35;
+
+// Single skeleton set for now. When we add more fonts we'll pick based on the
+// font in use; the rest of the code just takes whichever SkeletonSet matches.
+const SKELETONS: SkeletonSet = ANDIKA_SKELETONS;
 
 interface RowOptions {
   asset: FontAsset;
@@ -52,8 +58,12 @@ export function renderRow(opts: RowOptions): SVGSVGElement {
   slots.slice(0, slotsAvailable).forEach((kind, i) => {
     if (kind === "blank") return;
     const x = i * slotWidth;
-    const path = glyphPath(opts.asset, opts.char, geom.fontSizePx, x, geom.baseline);
-    appendGlyph(svg, path.pathD, kind);
+    if (kind === "solid") {
+      const path = glyphPath(opts.asset, opts.char, geom.fontSizePx, x, geom.baseline);
+      appendFilledGlyph(svg, path.pathD);
+    } else {
+      appendSkeleton(svg, opts.char, geom.fontSizePx, x, geom.baseline);
+    }
   });
 
   return svg;
@@ -77,18 +87,47 @@ function appendLine(
   svg.appendChild(line);
 }
 
-function appendGlyph(svg: SVGSVGElement, d: string, kind: "solid" | "dashed"): void {
+function appendFilledGlyph(svg: SVGSVGElement, d: string): void {
   const p = document.createElementNS(SVG_NS, "path");
   p.setAttribute("d", d);
-  if (kind === "solid") {
-    p.setAttribute("fill", "currentColor");
-  } else {
-    p.setAttribute("fill", "none");
-    p.setAttribute("stroke", "#888");
-    p.setAttribute("stroke-width", "1.5");
-    p.setAttribute("stroke-linecap", "round");
-    p.setAttribute("stroke-linejoin", "round");
-    p.setAttribute("stroke-dasharray", "4 4");
-  }
+  p.setAttribute("fill", "currentColor");
+  svg.appendChild(p);
+}
+
+/**
+ * Render a single-stroke centerline (the skeleton) for a character.
+ *
+ * The skeleton path data is in font units with y-up (opentype convention).
+ * We transform at render time: translate to the glyph's origin on the
+ * baseline, then scale by (fontSizePx / unitsPerEm, -fontSizePx / unitsPerEm)
+ * to map into SVG coordinates (y-down).
+ *
+ * `vector-effect: non-scaling-stroke` keeps stroke-width and dasharray in
+ * the final SVG pixel space, independent of the transform scale.
+ */
+function appendSkeleton(
+  svg: SVGSVGElement,
+  char: string,
+  fontSizePx: number,
+  originX: number,
+  baselineY: number,
+): void {
+  const skelData = SKELETONS.skeletons[char];
+  if (!skelData) return;
+
+  const scale = fontSizePx / SKELETONS.meta.unitsPerEm;
+  const p = document.createElementNS(SVG_NS, "path");
+  p.setAttribute("d", skelData);
+  p.setAttribute(
+    "transform",
+    `translate(${originX}, ${baselineY}) scale(${scale}, ${-scale})`,
+  );
+  p.setAttribute("fill", "none");
+  p.setAttribute("stroke", "#888");
+  p.setAttribute("stroke-width", "1.5");
+  p.setAttribute("stroke-linecap", "round");
+  p.setAttribute("stroke-linejoin", "round");
+  p.setAttribute("stroke-dasharray", "4 4");
+  p.setAttribute("vector-effect", "non-scaling-stroke");
   svg.appendChild(p);
 }
