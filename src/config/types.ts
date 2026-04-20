@@ -1,7 +1,6 @@
 export type Layout = "single" | "multi";
 export type Size = "small" | "medium" | "large";
-export type Theme = "none" | "enchanted" | "dinosaurs";
-// vehicles planned as a future theme — see AGENTS.md for how to add.
+export type Theme = "none" | "enchanted" | "dinosaurs" | "vehicles";
 export type PaperSize = "letter" | "a4";
 /** Number of dashed trace copies rendered per row, after the optional demo. */
 export type TraceCount = 0 | 1 | 2 | 3;

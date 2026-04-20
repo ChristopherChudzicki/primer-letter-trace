@@ -120,14 +120,12 @@ const STAR_TRAIL = `<svg viewBox="0 0 200 12" xmlns="http://www.w3.org/2000/svg"
 // ---------- Dinosaur motifs ----------
 
 const T_REX = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-  <!-- Body: big head + stout torso, tail whipping back, short arms, two legs. -->
-  <path fill="currentColor" d="M4 30 Q 10 18 22 16 L 28 10 Q 32 6 36 8 Q 40 10 38 14 L 34 18 Q 40 20 42 26 Q 43 30 40 34 L 34 36 L 32 44 L 28 44 L 28 38 L 22 38 L 22 44 L 18 44 L 18 36 Q 10 34 4 30 Z"/>
-  <!-- tiny arm -->
-  <path fill="currentColor" d="M26 26 L 30 28 L 30 32 L 28 32 L 28 30 L 26 30 Z"/>
+  <!-- T-Rex profile facing right: tail sweeps left, body leans forward over
+       two powerful hind legs, arched neck carries a big boxy head with jaw
+       open to the right, tiny arm curls against the chest. -->
+  <path fill="currentColor" d="M2 30 Q 8 24 18 22 Q 24 20 26 16 Q 26 8 34 8 L 44 10 L 46 14 L 40 16 L 42 18 L 34 20 Q 28 20 28 24 Q 32 28 34 30 Q 30 32 30 36 L 32 44 L 28 44 L 26 36 L 20 36 L 22 44 L 18 44 L 16 36 Q 10 34 6 32 Z"/>
   <!-- eye -->
-  <circle fill="#fff" cx="34" cy="13" r="1.3"/>
-  <!-- teeth -->
-  <path fill="#fff" d="M30 15 L 31 17 L 32 15 Z M 33 15 L 34 17 L 35 15 Z"/>
+  <circle fill="#fff" cx="40" cy="12" r="1.2"/>
 </svg>`;
 
 const BRONTO = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -238,6 +236,190 @@ const FOOTPRINT_TRAIL = `<svg viewBox="0 0 200 12" xmlns="http://www.w3.org/2000
   </g>
 </svg>`;
 
+// ---------- Vehicle motifs (cars + planes + trains + boats) ----------
+
+const CAR = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sedan body: low front/back with cabin in the middle. -->
+  <path fill="currentColor" d="M2 34 L 8 26 Q 12 24 18 24 L 30 24 Q 34 24 38 26 L 46 34 L 46 38 L 2 38 Z"/>
+  <!-- Windshield + rear window (white translucent) -->
+  <path fill="#fff" opacity="0.55" d="M12 26 L 16 23 L 24 23 L 24 29 L 12 29 Z"/>
+  <path fill="#fff" opacity="0.55" d="M26 23 L 32 23 L 36 26 L 36 29 L 26 29 Z"/>
+  <!-- Wheels -->
+  <circle fill="currentColor" cx="14" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="14" cy="40" r="1.5"/>
+  <circle fill="currentColor" cx="34" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="34" cy="40" r="1.5"/>
+</svg>`;
+
+const TRUCK = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pickup truck: cab + longer bed. -->
+  <path fill="currentColor" d="M2 38 L 2 22 L 10 22 L 14 16 L 22 16 L 22 38 Z"/>
+  <path fill="currentColor" d="M22 22 L 46 22 L 46 38 L 22 38 Z"/>
+  <!-- Cab window -->
+  <path fill="#fff" opacity="0.55" d="M11 22 L 14 18 L 20 18 L 20 22 Z"/>
+  <!-- Wheels -->
+  <circle fill="currentColor" cx="10" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="10" cy="40" r="1.5"/>
+  <circle fill="currentColor" cx="36" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="36" cy="40" r="1.5"/>
+</svg>`;
+
+const BUS = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Long rectangular body with a row of windows. -->
+  <path fill="currentColor" d="M4 12 L 44 12 Q 46 12 46 14 L 46 38 L 2 38 L 2 14 Q 2 12 4 12 Z"/>
+  <path fill="#fff" opacity="0.55" d="M5 16 L 12 16 L 12 22 L 5 22 Z"/>
+  <path fill="#fff" opacity="0.55" d="M14 16 L 21 16 L 21 22 L 14 22 Z"/>
+  <path fill="#fff" opacity="0.55" d="M23 16 L 30 16 L 30 22 L 23 22 Z"/>
+  <path fill="#fff" opacity="0.55" d="M32 16 L 43 16 L 43 22 L 32 22 Z"/>
+  <!-- Door -->
+  <path fill="#fff" opacity="0.35" d="M38 24 L 43 24 L 43 36 L 38 36 Z"/>
+  <!-- Wheels -->
+  <circle fill="currentColor" cx="12" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="12" cy="40" r="1.5"/>
+  <circle fill="currentColor" cx="36" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="36" cy="40" r="1.5"/>
+</svg>`;
+
+const RACE_CAR = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Low streamlined body with a rear spoiler. -->
+  <path fill="currentColor" d="M2 34 Q 6 28 14 26 L 34 26 Q 42 26 44 32 L 46 32 L 46 36 L 6 36 L 2 34 Z"/>
+  <!-- Cockpit -->
+  <path fill="#fff" opacity="0.6" d="M18 28 L 28 28 L 28 32 L 18 32 Z"/>
+  <!-- Spoiler -->
+  <path fill="currentColor" d="M40 26 L 46 22 L 46 28 L 42 28 Z"/>
+  <!-- Wheels -->
+  <circle fill="currentColor" cx="10" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="10" cy="40" r="1.5"/>
+  <circle fill="currentColor" cx="38" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="38" cy="40" r="1.5"/>
+</svg>`;
+
+const AIRPLANE = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Side view: fuselage, swept wings, tail fin. -->
+  <path fill="currentColor" d="M2 26 Q 4 22 12 22 L 40 24 Q 46 24 46 28 Q 46 30 40 30 L 12 30 Q 4 30 2 26 Z"/>
+  <!-- Tail fin -->
+  <path fill="currentColor" d="M38 14 L 44 14 L 46 24 L 38 24 Z"/>
+  <!-- Wings (top + bottom pair) -->
+  <path fill="currentColor" d="M18 24 L 30 14 L 34 14 L 26 24 Z"/>
+  <path fill="currentColor" d="M18 28 L 26 28 L 32 36 L 28 36 Z"/>
+  <!-- Cockpit window -->
+  <circle fill="#fff" opacity="0.7" cx="40" cy="26" r="1.4"/>
+</svg>`;
+
+const TRAIN = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Locomotive: boiler (left), cab (right), smokestack + steam puff on top. -->
+  <path fill="currentColor" d="M4 34 L 4 20 Q 4 16 10 16 L 28 16 L 28 34 Z"/>
+  <path fill="currentColor" d="M28 14 L 44 14 Q 46 14 46 16 L 46 34 L 28 34 Z"/>
+  <!-- Smokestack -->
+  <path fill="currentColor" d="M8 16 L 8 6 L 14 6 L 14 16 Z"/>
+  <circle fill="#fff" opacity="0.7" cx="11" cy="4" r="2"/>
+  <!-- Cab windows -->
+  <path fill="#fff" opacity="0.55" d="M30 18 L 44 18 L 44 26 L 30 26 Z"/>
+  <!-- Wheels -->
+  <circle fill="currentColor" cx="12" cy="38" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="12" cy="38" r="1.3"/>
+  <circle fill="currentColor" cx="24" cy="38" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="24" cy="38" r="1.3"/>
+  <circle fill="currentColor" cx="38" cy="38" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="38" cy="38" r="1.3"/>
+</svg>`;
+
+const FIRE_TRUCK = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Box-shape body with a ladder angled up off the back. -->
+  <path fill="currentColor" d="M2 38 L 2 22 L 12 22 L 14 18 L 22 18 L 22 22 L 46 22 L 46 38 Z"/>
+  <!-- Diagonal ladder bars -->
+  <path fill="currentColor" d="M24 22 L 24 20 L 46 10 L 46 12 Z"/>
+  <path fill="currentColor" d="M28 16 L 28 14 L 46 6 L 46 8 Z"/>
+  <!-- Cab window -->
+  <path fill="#fff" opacity="0.55" d="M4 24 L 18 24 L 18 30 L 4 30 Z"/>
+  <!-- Siren light dot -->
+  <circle fill="#fff" opacity="0.9" cx="18" cy="16" r="1.2"/>
+  <!-- Wheels -->
+  <circle fill="currentColor" cx="12" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="12" cy="40" r="1.5"/>
+  <circle fill="currentColor" cx="36" cy="40" r="4"/>
+  <circle fill="#fff" opacity="0.9" cx="36" cy="40" r="1.5"/>
+</svg>`;
+
+const HELICOPTER = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rotor blade (wide thin bar) -->
+  <path fill="currentColor" d="M2 10 L 46 10 L 46 13 L 2 13 Z"/>
+  <!-- Rotor mast -->
+  <path fill="currentColor" d="M22 13 L 26 13 L 26 18 L 22 18 Z"/>
+  <!-- Body + tail boom -->
+  <path fill="currentColor" d="M6 22 Q 6 18 12 18 L 30 18 Q 38 20 40 26 L 46 28 L 46 30 L 40 30 Q 36 34 28 34 L 12 34 Q 4 32 4 26 Q 4 22 6 22 Z"/>
+  <!-- Cockpit window -->
+  <path fill="#fff" opacity="0.6" d="M8 22 L 22 22 L 22 30 L 8 30 Z"/>
+  <!-- Skids -->
+  <path fill="currentColor" d="M6 38 L 38 38 L 38 40 L 6 40 Z"/>
+  <path fill="currentColor" d="M10 34 L 12 38 L 10 38 Z"/>
+  <path fill="currentColor" d="M30 34 L 34 38 L 32 38 Z"/>
+</svg>`;
+
+const SAILBOAT = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hull -->
+  <path fill="currentColor" d="M2 34 L 46 34 L 40 44 L 8 44 Z"/>
+  <!-- Mast -->
+  <path fill="currentColor" d="M23 6 L 25 6 L 25 32 L 23 32 Z"/>
+  <!-- Mainsail (big triangle to right) -->
+  <path fill="currentColor" d="M25 8 L 40 32 L 25 32 Z"/>
+  <!-- Jib (smaller triangle to left) -->
+  <path fill="currentColor" opacity="0.7" d="M23 12 L 12 32 L 23 32 Z"/>
+  <!-- Water wavelets -->
+  <path fill="currentColor" opacity="0.4" d="M0 40 Q 4 38 8 40 Q 12 42 16 40 L 16 41 Q 12 43 8 41 Q 4 39 0 41 Z"/>
+</svg>`;
+
+const TRAFFIC_LIGHT = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Post -->
+  <path fill="currentColor" d="M22 36 L 26 36 L 26 46 L 22 46 Z"/>
+  <!-- Housing -->
+  <path fill="currentColor" d="M14 6 Q 14 4 16 4 L 32 4 Q 34 4 34 6 L 34 34 Q 34 36 32 36 L 16 36 Q 14 36 14 34 Z"/>
+  <!-- Lights (three lenses) -->
+  <circle fill="#fff" opacity="0.9" cx="24" cy="11" r="3"/>
+  <circle fill="#fff" opacity="0.9" cx="24" cy="20" r="3"/>
+  <circle fill="#fff" opacity="0.9" cx="24" cy="29" r="3"/>
+</svg>`;
+
+const CONE = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Traffic cone: base, cone, reflective stripe. -->
+  <path fill="currentColor" d="M6 40 L 42 40 L 42 44 L 6 44 Z"/>
+  <path fill="currentColor" d="M20 8 L 28 8 L 38 40 L 10 40 Z"/>
+  <path fill="#fff" opacity="0.75" d="M14 26 L 34 26 L 35 30 L 13 30 Z"/>
+</svg>`;
+
+// Header decoration strip: a row of tiny vehicles.
+const VEHICLE_TRAIL = `<svg viewBox="0 0 200 12" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <g fill="currentColor">
+    <!-- car -->
+    <g transform="translate(10 6)">
+      <path d="M-8 2 L -6 -1 L -4 -2 L 4 -2 L 6 -1 L 8 2 L 8 3 L -8 3 Z"/>
+      <circle cx="-5" cy="3.5" r="1"/><circle cx="5" cy="3.5" r="1"/>
+    </g>
+    <!-- plane -->
+    <g transform="translate(50 6)">
+      <path d="M-10 0 L 6 0 L 10 -1 L 10 1 L 6 1 L 2 3 L 0 1 L -10 1 Z"/>
+      <path d="M4 -4 L 8 -4 L 10 0 L 4 0 Z"/>
+    </g>
+    <!-- bus -->
+    <g transform="translate(92 6)">
+      <path d="M-8 -3 L 8 -3 L 8 3 L -8 3 Z"/>
+      <circle cx="-5" cy="3.5" r="1"/><circle cx="5" cy="3.5" r="1"/>
+    </g>
+    <!-- sailboat -->
+    <g transform="translate(132 6)">
+      <path d="M-7 3 L 7 3 L 5 5 L -5 5 Z"/>
+      <path d="M-0.5 -5 L 0.5 -5 L 0.5 3 L -0.5 3 Z"/>
+      <path d="M0.5 -4 L 5 3 L 0.5 3 Z"/>
+    </g>
+    <!-- train -->
+    <g transform="translate(172 6)">
+      <path d="M-10 -2 L 10 -2 L 10 3 L -10 3 Z"/>
+      <path d="M-9 -4 L -6 -4 L -6 -2 L -9 -2 Z"/>
+      <circle cx="-6" cy="3.5" r="1"/><circle cx="0" cy="3.5" r="1"/><circle cx="6" cy="3.5" r="1"/>
+    </g>
+  </g>
+</svg>`;
+
 export const THEMES: Record<Theme, ThemeDef> = {
   none: {
     palette: {
@@ -286,5 +468,26 @@ export const THEMES: Record<Theme, ThemeDef> = {
       { name: "bone",         svg: BONE,         scale: 0.75, tint: "accent" },
     ],
     headerDecoration: FOOTPRINT_TRAIL,
+  },
+  vehicles: {
+    palette: {
+      ruleColor: "#8aa6c7",     // soft slate-blue
+      primary: "#2b6fb4",       // strong blue for big vehicles
+      accent: "#e2622e",         // warm orange for cones / fire trucks / accents
+    },
+    motifs: [
+      { name: "car",           svg: CAR,           scale: 1.2, tint: "primary" },
+      { name: "bus",           svg: BUS,           scale: 1.2, tint: "primary" },
+      { name: "train",         svg: TRAIN,         scale: 1.3, tint: "primary" },
+      { name: "airplane",      svg: AIRPLANE,      scale: 1.2, tint: "primary" },
+      { name: "helicopter",    svg: HELICOPTER,    scale: 1.1, tint: "primary" },
+      { name: "sailboat",      svg: SAILBOAT,      scale: 1.0, tint: "primary" },
+      { name: "race-car",      svg: RACE_CAR,      scale: 1.0, tint: "accent" },
+      { name: "fire-truck",    svg: FIRE_TRUCK,    scale: 1.0, tint: "accent" },
+      { name: "truck",         svg: TRUCK,         scale: 0.9, tint: "primary" },
+      { name: "traffic-light", svg: TRAFFIC_LIGHT, scale: 0.75, tint: "accent" },
+      { name: "cone",          svg: CONE,          scale: 0.7, tint: "accent" },
+    ],
+    headerDecoration: VEHICLE_TRAIL,
   },
 };

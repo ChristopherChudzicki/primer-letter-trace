@@ -113,6 +113,7 @@ const FORM_HTML = `
       <label><input type="radio" name="theme" value="none" /> None</label>
       <label><input type="radio" name="theme" value="enchanted" /> Enchanted</label>
       <label><input type="radio" name="theme" value="dinosaurs" /> Dinosaurs</label>
+      <label><input type="radio" name="theme" value="vehicles" /> Cars + Planes</label>
     </fieldset>
 
     <fieldset class="field">

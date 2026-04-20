@@ -6,7 +6,7 @@ import { parseContent } from "./content";
 
 const LAYOUTS: readonly Layout[] = ["single", "multi"] as const;
 const SIZES: readonly Size[] = ["small", "medium", "large"] as const;
-const THEMES: readonly Theme[] = ["none", "enchanted", "dinosaurs"] as const;
+const THEMES: readonly Theme[] = ["none", "enchanted", "dinosaurs", "vehicles"] as const;
 const PAPER_SIZES: readonly PaperSize[] = ["letter", "a4"] as const;
 
 function coerce<T extends string>(

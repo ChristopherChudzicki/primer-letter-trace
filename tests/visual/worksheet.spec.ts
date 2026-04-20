@@ -32,7 +32,7 @@ const rowVariants: RowVariant[] = [
   { slug: "demo-only", showDemo: true, traceCount: 0 },
   { slug: "trace1", showDemo: false, traceCount: 1 },
 ];
-const themes: SheetConfig["theme"][] = ["none", "enchanted", "dinosaurs"];
+const themes: SheetConfig["theme"][] = ["none", "enchanted", "dinosaurs", "vehicles"];
 const sizes: SheetConfig["size"][] = ["small", "medium", "large"];
 
 for (const layout of layouts) {
