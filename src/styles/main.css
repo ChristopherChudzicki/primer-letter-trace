@@ -1,9 +1,3 @@
-@font-face {
-  font-family: "Andika";
-  src: url("/andika.ttf") format("truetype");
-  font-display: swap;
-}
-
 * { box-sizing: border-box; }
 
 body {

@@ -11,7 +11,10 @@ export async function startApp(): Promise<void> {
   if (!controls || !preview) throw new Error("DOM roots missing");
 
   preview.textContent = "Loading font…";
-  const asset = await loadFont("/andika.ttf");
+  // BASE_URL is "/" in dev and whatever `base` is set to in production
+  // (currently "./" — works when the app is served from any subpath like
+  // /primer-letter-trace/).
+  const asset = await loadFont(`${import.meta.env.BASE_URL}andika.ttf`);
 
   const store = new Store<SheetConfig>(configFromURL(new URL(window.location.href)));
 
