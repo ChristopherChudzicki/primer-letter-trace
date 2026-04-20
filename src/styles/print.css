@@ -1,0 +1,26 @@
+@page { margin: 0.5in; }
+
+@media print {
+  html, body {
+    background: #fff;
+    margin: 0;
+  }
+
+  body { display: block; }
+
+  .controls { display: none; }
+
+  .preview { padding: 0; overflow: visible; }
+
+  .sheet {
+    box-shadow: none;
+    margin: 0;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
