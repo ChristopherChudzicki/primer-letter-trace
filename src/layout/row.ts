@@ -58,10 +58,12 @@ export function renderRow(opts: RowOptions): SVGSVGElement {
   slots.slice(0, slotsAvailable).forEach((kind, i) => {
     if (kind === "blank") return;
     const x = i * slotWidth;
+    const path = glyphPath(opts.asset, opts.char, geom.fontSizePx, x, geom.baseline);
     if (kind === "solid") {
-      const path = glyphPath(opts.asset, opts.char, geom.fontSizePx, x, geom.baseline);
-      appendFilledGlyph(svg, path.pathD);
+      appendFilledGlyph(svg, path.pathD, "currentColor");
     } else {
+      // Trace letter: pale ghost fill + dashed centerline skeleton on top.
+      appendFilledGlyph(svg, path.pathD, "rgba(0, 0, 0, 0.13)");
       appendSkeleton(svg, opts.char, geom.fontSizePx, x, geom.baseline);
     }
   });
@@ -87,10 +89,10 @@ function appendLine(
   svg.appendChild(line);
 }
 
-function appendFilledGlyph(svg: SVGSVGElement, d: string): void {
+function appendFilledGlyph(svg: SVGSVGElement, d: string, fill: string): void {
   const p = document.createElementNS(SVG_NS, "path");
   p.setAttribute("d", d);
-  p.setAttribute("fill", "currentColor");
+  p.setAttribute("fill", fill);
   svg.appendChild(p);
 }
 
