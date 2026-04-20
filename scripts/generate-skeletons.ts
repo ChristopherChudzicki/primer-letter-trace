@@ -155,6 +155,58 @@ function simplifyPolyline(
   return { points: simpler.map((p) => [p.x, p.y]) };
 }
 
+/** Total Euclidean length of a polyline. */
+function polylineLength(p: Polyline): number {
+  let sum = 0;
+  for (let i = 1; i < p.points.length; i++) {
+    const prev = p.points[i - 1]!;
+    const curr = p.points[i]!;
+    sum += Math.hypot(curr[0] - prev[0], curr[1] - prev[1]);
+  }
+  return sum;
+}
+
+/** True if either endpoint of a is within `tol` of either endpoint of b. */
+function endpointsConnected(a: Polyline, b: Polyline, tol: number): boolean {
+  const ends: [[number, number], [number, number]] = [
+    a.points[0]!,
+    a.points[a.points.length - 1]!,
+  ];
+  const oEnds: [[number, number], [number, number]] = [
+    b.points[0]!,
+    b.points[b.points.length - 1]!,
+  ];
+  for (const ae of ends) {
+    for (const be of oEnds) {
+      if (Math.hypot(ae[0] - be[0], ae[1] - be[1]) < tol) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Drop short polylines that are attached to another polyline by an endpoint —
+ * these are typically spur artifacts from thinning at sharp junctions (the
+ * little Y-spike at the top of W, for example).
+ *
+ * Short isolated polylines (no connected neighbors) are kept, so dots on i/j
+ * and tiny free-standing strokes survive.
+ */
+function pruneSpurs(
+  polylines: Polyline[],
+  minLengthUnits: number,
+  connectToleranceUnits: number,
+): Polyline[] {
+  return polylines.filter((p) => {
+    if (polylineLength(p) >= minLengthUnits) return true;
+    // Short: only keep if isolated.
+    const connected = polylines.some(
+      (other) => other !== p && endpointsConnected(p, other, connectToleranceUnits),
+    );
+    return !connected;
+  });
+}
+
 /** Map pixel-space polylines back to font units. */
 function mapToFontUnits(
   polyline: Polyline,
@@ -218,11 +270,18 @@ function main(): void {
     }
     const simplified = raw.map((p) => simplifyPolyline(p, args.simplifyTolerance));
     const inFontUnits = simplified.map((p) => mapToFontUnits(p, toFontUnits));
-    skeletons[char] = polylinesToSvgPath(inFontUnits);
-    const pointCount = inFontUnits.reduce((n, p) => n + p.points.length, 0);
-    const strokes = inFontUnits.length;
+    // Prune spur artifacts from thinning at sharp junctions. Thresholds in
+    // font units; ~8% of em length is typical for junction spurs.
+    const minLengthUnits = font.unitsPerEm * 0.08;
+    const connectToleranceUnits = font.unitsPerEm * 0.02;
+    const pruned = pruneSpurs(inFontUnits, minLengthUnits, connectToleranceUnits);
+    const prunedCount = inFontUnits.length - pruned.length;
+    skeletons[char] = polylinesToSvgPath(pruned);
+    const pointCount = pruned.reduce((n, p) => n + p.points.length, 0);
+    const strokes = pruned.length;
+    const prunedNote = prunedCount > 0 ? ` (pruned ${prunedCount} spur${prunedCount === 1 ? "" : "s"})` : "";
     console.log(
-      `  ${JSON.stringify(char)}: ${strokes} stroke${strokes === 1 ? "" : "s"}, ${pointCount} points`,
+      `  ${JSON.stringify(char)}: ${strokes} stroke${strokes === 1 ? "" : "s"}, ${pointCount} points${prunedNote}`,
     );
   }
 
