@@ -30,6 +30,7 @@ body {
   display: block;
 }
 .field label { display: block; font-size: 14px; margin: 4px 0; }
+.field label.inline { display: inline-block; margin-right: 12px; }
 .field input[type="radio"] { margin-right: 6px; }
 
 textarea {

@@ -1,7 +1,7 @@
 import type { FontAsset } from "../rendering/font";
 import { glyphPath } from "../rendering/glyph";
 import { computeLines, CAP_HEIGHT_PX } from "../rendering/ruled-lines";
-import type { RowStyle, Size } from "../config/types";
+import type { Size, TraceCount } from "../config/types";
 import ANDIKA_SKELETONS from "../rendering/skeletons/andika";
 import type { SkeletonSet } from "../rendering/skeletons/types";
 
@@ -18,7 +18,10 @@ interface RowOptions {
   asset: FontAsset;
   /** The content of this row — may be a single letter, a whole word, or "" (blank row). */
   line: string;
-  rowStyle: RowStyle;
+  /** Render a solid demo glyph at the start of the row. */
+  showDemo: boolean;
+  /** Number of dashed trace slots after the demo (before blanks fill the rest). */
+  traceCount: TraceCount;
   size: Size;
   widthPx: number;
   ruleColor: string;
@@ -48,24 +51,13 @@ export function renderRow(opts: RowOptions): SVGSVGElement {
   // than the printable width, we still show it (user opted into overflow).
   const slotsThatFit = Math.max(1, Math.floor(opts.widthPx / slotWidth));
 
-  // Each row style has a set of "functional" slots that must always render,
-  // regardless of available width (so a wide word still shows demo + trace).
-  // Extra width is filled with blank slots for free-copy space.
-  let slots: Array<"solid" | "dashed" | "blank">;
-  switch (opts.rowStyle) {
-    case "combo":
-      slots = ["solid", "dashed", "dashed"];
-      break;
-    case "all-trace":
-      slots = ["dashed"];
-      break;
-    case "demo-blank":
-      slots = ["solid"];
-      break;
-  }
-  while (slots.length < slotsThatFit) {
-    slots.push(opts.rowStyle === "all-trace" ? "dashed" : "blank");
-  }
+  // Functional slots always render (a demo + the requested number of trace
+  // copies), even for wide words that overflow the row. Remaining width is
+  // filled with blank slots for free-copy space.
+  const slots: Array<"solid" | "dashed" | "blank"> = [];
+  if (opts.showDemo) slots.push("solid");
+  for (let i = 0; i < opts.traceCount; i++) slots.push("dashed");
+  while (slots.length < slotsThatFit) slots.push("blank");
 
   slots.forEach((kind, i) => {
     if (kind === "blank") return;

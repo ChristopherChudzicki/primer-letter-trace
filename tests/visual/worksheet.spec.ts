@@ -9,24 +9,40 @@ function urlFor(partial: Partial<SheetConfig>): string {
   const params = new URLSearchParams();
   params.set("content", partial.content?.join("\n") ?? SAMPLE_CONTENT);
   params.set("layout", partial.layout ?? "multi");
-  params.set("row", partial.rowStyle ?? "combo");
+  params.set("demo", (partial.showDemo ?? true) ? "1" : "0");
+  params.set("trace", String(partial.traceCount ?? 2));
   params.set("size", partial.size ?? "medium");
   params.set("theme", partial.theme ?? "none");
   params.set("paper", partial.paperSize ?? "letter");
   return `/?${params.toString()}`;
 }
 
+interface RowVariant {
+  /** Short slug for the snapshot filename. */
+  slug: string;
+  showDemo: boolean;
+  traceCount: SheetConfig["traceCount"];
+}
+
 const layouts: SheetConfig["layout"][] = ["multi", "single"];
-const rowStyles: SheetConfig["rowStyle"][] = ["combo", "all-trace", "demo-blank"];
+// Representative row variants covering: default (demo + 2 trace), demo-only,
+// trace-only. Extra traceCount levels (0, 3) are exercised by the unit test.
+const rowVariants: RowVariant[] = [
+  { slug: "demo-trace2", showDemo: true, traceCount: 2 },
+  { slug: "demo-only", showDemo: true, traceCount: 0 },
+  { slug: "trace1", showDemo: false, traceCount: 1 },
+];
 const themes: SheetConfig["theme"][] = ["none", "enchanted"];
 const sizes: SheetConfig["size"][] = ["small", "medium", "large"];
 
 for (const layout of layouts) {
-  for (const rowStyle of rowStyles) {
+  for (const variant of rowVariants) {
     for (const theme of themes) {
-      const name = `${layout}-${rowStyle}-${theme}`;
+      const name = `${layout}-${variant.slug}-${theme}`;
       test(`renders ${name}`, async ({ page }) => {
-        await page.goto(urlFor({ layout, rowStyle, theme }));
+        await page.goto(urlFor({
+          layout, showDemo: variant.showDemo, traceCount: variant.traceCount, theme,
+        }));
         await page.waitForFunction(() => document.querySelectorAll(".sheet").length > 0);
         await page.waitForFunction(
           () => document.querySelector(".sheet svg.row path, .sheet svg.header path") !== null,

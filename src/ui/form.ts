@@ -7,7 +7,8 @@ export function bindForm(root: HTMLElement, store: Store<SheetConfig>): void {
 
   const contentField = root.querySelector<HTMLTextAreaElement>("#content")!;
   const layoutGroup = root.querySelectorAll<HTMLInputElement>("input[name='layout']");
-  const rowGroup = root.querySelectorAll<HTMLInputElement>("input[name='row']");
+  const demoGroup = root.querySelectorAll<HTMLInputElement>("input[name='demo']");
+  const traceGroup = root.querySelectorAll<HTMLInputElement>("input[name='trace']");
   const sizeGroup = root.querySelectorAll<HTMLInputElement>("input[name='size']");
   const themeGroup = root.querySelectorAll<HTMLInputElement>("input[name='theme']");
   const paperGroup = root.querySelectorAll<HTMLInputElement>("input[name='paper']");
@@ -20,7 +21,8 @@ export function bindForm(root: HTMLElement, store: Store<SheetConfig>): void {
       contentField.value = desired;
     }
     setRadio(layoutGroup, config.layout);
-    setRadio(rowGroup, config.rowStyle);
+    setRadio(demoGroup, config.showDemo ? "yes" : "no");
+    setRadio(traceGroup, String(config.traceCount));
     setRadio(sizeGroup, config.size);
     setRadio(themeGroup, config.theme);
     setRadio(paperGroup, config.paperSize);
@@ -31,7 +33,8 @@ export function bindForm(root: HTMLElement, store: Store<SheetConfig>): void {
   });
 
   bindRadioGroup(layoutGroup, (v) => store.update({ layout: v as SheetConfig["layout"] }));
-  bindRadioGroup(rowGroup, (v) => store.update({ rowStyle: v as SheetConfig["rowStyle"] }));
+  bindRadioGroup(demoGroup, (v) => store.update({ showDemo: v === "yes" }));
+  bindRadioGroup(traceGroup, (v) => store.update({ traceCount: Number(v) as SheetConfig["traceCount"] }));
   bindRadioGroup(sizeGroup, (v) => store.update({ size: v as SheetConfig["size"] }));
   bindRadioGroup(themeGroup, (v) => store.update({ theme: v as SheetConfig["theme"] }));
   bindRadioGroup(paperGroup, (v) => store.update({ paperSize: v as SheetConfig["paperSize"] }));
@@ -85,10 +88,17 @@ const FORM_HTML = `
     </fieldset>
 
     <fieldset class="field">
-      <legend>Row style</legend>
-      <label><input type="radio" name="row" value="combo" /> Combo (demo + trace + blank)</label>
-      <label><input type="radio" name="row" value="all-trace" /> Trace + blank</label>
-      <label><input type="radio" name="row" value="demo-blank" /> Demo + blank</label>
+      <legend>Show demo</legend>
+      <label><input type="radio" name="demo" value="yes" /> Yes</label>
+      <label><input type="radio" name="demo" value="no" /> No</label>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>Trace copies</legend>
+      <label class="inline"><input type="radio" name="trace" value="0" /> 0</label>
+      <label class="inline"><input type="radio" name="trace" value="1" /> 1</label>
+      <label class="inline"><input type="radio" name="trace" value="2" /> 2</label>
+      <label class="inline"><input type="radio" name="trace" value="3" /> 3</label>
     </fieldset>
 
     <fieldset class="field">

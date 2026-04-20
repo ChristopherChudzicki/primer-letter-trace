@@ -51,8 +51,9 @@ function buildMultiLayout(
     const content = pageContentArea(page);
     for (const line of chunk) {
       const row = renderRow({
-        asset, line, rowStyle: config.rowStyle, size: config.size,
-        widthPx: printableWidth, ruleColor: theme.palette.ruleColor,
+        asset, line, showDemo: config.showDemo, traceCount: config.traceCount,
+        size: config.size, widthPx: printableWidth,
+        ruleColor: theme.palette.ruleColor,
       });
       row.style.marginBottom = `${ROW_SPACING_PX}px`;
       content.appendChild(row);
@@ -98,8 +99,9 @@ function buildSingleLayout(
 
     for (let r = 0; r < rowsPerPage; r++) {
       const row = renderRow({
-        asset, line, rowStyle: config.rowStyle, size: config.size,
-        widthPx: printableWidth, ruleColor: theme.palette.ruleColor,
+        asset, line, showDemo: config.showDemo, traceCount: config.traceCount,
+        size: config.size, widthPx: printableWidth,
+        ruleColor: theme.palette.ruleColor,
       });
       row.style.marginBottom = `${ROW_SPACING_PX}px`;
       content.appendChild(row);
