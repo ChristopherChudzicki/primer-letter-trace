@@ -4,6 +4,7 @@ import { renderRow } from "./row";
 import { computeLines, CAP_HEIGHT_PX } from "../rendering/ruled-lines";
 import { glyphPath } from "../rendering/glyph";
 import { THEMES, ThemeDef } from "../theming/themes";
+import { placeMotifs } from "../theming/placement";
 
 const PAPER_DIMENSIONS: Record<PaperSize, { widthPx: number; heightPx: number }> = {
   letter: { widthPx: 8.5 * 96, heightPx: 11 * 96 },
@@ -43,6 +44,7 @@ function buildMultiLayout(
   const rowsPerPage = Math.max(1, Math.floor(printableHeight / rowStride));
 
   const pages: HTMLElement[] = [];
+  let pageIndex = 0;
   for (let i = 0; i < lines.length; i += rowsPerPage) {
     const chunk = lines.slice(i, i + rowsPerPage);
     const page = createPage(config.paperSize);
@@ -50,13 +52,14 @@ function buildMultiLayout(
     for (const line of chunk) {
       const row = renderRow({
         asset, line, rowStyle: config.rowStyle, size: config.size,
-        widthPx: printableWidth, ruleColor: theme.ruleColor,
+        widthPx: printableWidth, ruleColor: theme.palette.ruleColor,
       });
       row.style.marginBottom = `${ROW_SPACING_PX}px`;
       content.appendChild(row);
     }
-    applyThemeChrome(page, theme);
+    applyThemeChrome(page, theme, config, pageIndex);
     pages.push(page);
+    pageIndex++;
   }
   return pages;
 }
@@ -70,13 +73,17 @@ function buildSingleLayout(
 ): HTMLElement[] {
   const rowHeight = singleRowHeight(asset, config.size);
   const rowStride = rowHeight + ROW_SPACING_PX;
-  const headerHeight = computeLines(asset, HEADER_CAP_PX).descenderLine;
+  // Base header height (just the big word). Decoration strip adds 14px when
+  // the theme specifies one; accounted for below to not drop a row count.
+  const baseHeaderHeight = computeLines(asset, HEADER_CAP_PX).descenderLine;
+  const decoHeight = theme.headerDecoration ? 14 : 0;
   const rowsPerPage = Math.max(
     1,
-    Math.floor((printableHeight - headerHeight - ROW_SPACING_PX) / rowStride),
+    Math.floor((printableHeight - baseHeaderHeight - decoHeight - ROW_SPACING_PX) / rowStride),
   );
 
   const pages: HTMLElement[] = [];
+  let pageIndex = 0;
   for (const line of config.content) {
     // Single-layout treats each non-empty line as its own page. Blank lines
     // are meaningful as row separators in multi-layout, but as pages they'd
@@ -85,20 +92,21 @@ function buildSingleLayout(
     const page = createPage(config.paperSize);
     const content = pageContentArea(page);
 
-    const { svg: headerSvg } = renderHeader(asset, line, printableWidth);
-    headerSvg.style.marginBottom = `${ROW_SPACING_PX}px`;
-    content.appendChild(headerSvg);
+    const { element: headerEl } = renderHeader(asset, line, printableWidth, theme);
+    headerEl.style.marginBottom = `${ROW_SPACING_PX}px`;
+    content.appendChild(headerEl);
 
     for (let r = 0; r < rowsPerPage; r++) {
       const row = renderRow({
         asset, line, rowStyle: config.rowStyle, size: config.size,
-        widthPx: printableWidth, ruleColor: theme.ruleColor,
+        widthPx: printableWidth, ruleColor: theme.palette.ruleColor,
       });
       row.style.marginBottom = `${ROW_SPACING_PX}px`;
       content.appendChild(row);
     }
-    applyThemeChrome(page, theme);
+    applyThemeChrome(page, theme, config, pageIndex);
     pages.push(page);
+    pageIndex++;
   }
   return pages;
 }
@@ -130,13 +138,18 @@ function pageContentArea(page: HTMLElement): HTMLElement {
   return content;
 }
 
-function renderHeader(asset: FontAsset, item: string, widthPx: number): {
-  svg: SVGSVGElement;
-  height: number;
-} {
+function renderHeader(
+  asset: FontAsset,
+  item: string,
+  widthPx: number,
+  theme: ThemeDef,
+): { element: HTMLElement; height: number } {
   // computeLines gives us ascender room above and descender room below, so
   // letters with ascenders (b, d, f, h) or descenders (g, j, p, q, y) aren't clipped.
   const geom = computeLines(asset, HEADER_CAP_PX);
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("header-wrap");
+
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", `0 0 ${widthPx} ${geom.descenderLine}`);
   svg.setAttribute("width", `${widthPx}`);
@@ -155,19 +168,57 @@ function renderHeader(asset: FontAsset, item: string, widthPx: number): {
     svg.appendChild(p);
     cursorX += widths[idx] ?? 0;
   });
-  return { svg, height: geom.descenderLine };
+  wrapper.appendChild(svg);
+
+  let totalHeight = geom.descenderLine;
+  if (theme.headerDecoration) {
+    const deco = document.createElement("div");
+    deco.classList.add("header-deco");
+    deco.style.width = `${widthPx}px`;
+    deco.style.height = "14px";
+    deco.style.color = theme.palette.accent;
+    deco.innerHTML = theme.headerDecoration;
+    wrapper.appendChild(deco);
+    totalHeight += 14;
+  }
+
+  return { element: wrapper, height: totalHeight };
 }
 
-function applyThemeChrome(page: HTMLElement, theme: ThemeDef): void {
-  if (!theme.cornerSvg) return;
-  const corner = document.createElement("div");
-  corner.classList.add("sheet__corner");
-  corner.style.position = "absolute";
-  corner.style.top = `${MARGIN_PX / 2}px`;
-  corner.style.right = `${MARGIN_PX / 2}px`;
-  corner.style.width = "48px";
-  corner.style.height = "48px";
-  corner.style.color = theme.accentColor;
-  corner.innerHTML = theme.cornerSvg;
-  page.appendChild(corner);
+function applyThemeChrome(
+  page: HTMLElement,
+  theme: ThemeDef,
+  config: SheetConfig,
+  pageIndex: number,
+): void {
+  if (theme.motifs.length === 0) return;
+  const paper = PAPER_DIMENSIONS[config.paperSize];
+  const placements = placeMotifs({
+    theme,
+    pageWidthPx: paper.widthPx,
+    pageHeightPx: paper.heightPx,
+    marginPx: MARGIN_PX,
+    letterSize: config.size,
+    seedKey: seedKeyFor(config),
+    pageIndex,
+  });
+  for (const p of placements) {
+    const el = document.createElement("div");
+    el.classList.add("sheet__motif");
+    el.style.position = "absolute";
+    el.style.left = `${p.x}px`;
+    el.style.top = `${p.y}px`;
+    el.style.width = `${p.size}px`;
+    el.style.height = `${p.size}px`;
+    el.style.color = p.color;
+    el.style.transform = `rotate(${p.rotation}deg)`;
+    el.style.transformOrigin = "center";
+    el.innerHTML = p.svg;
+    page.appendChild(el);
+  }
+}
+
+/** Content + theme form a stable seed so the same sheet always looks the same. */
+function seedKeyFor(config: SheetConfig): string {
+  return `${config.theme}|${config.content.join("\u2028")}`;
 }

@@ -18,7 +18,7 @@ function urlFor(partial: Partial<SheetConfig>): string {
 
 const layouts: SheetConfig["layout"][] = ["multi", "single"];
 const rowStyles: SheetConfig["rowStyle"][] = ["combo", "all-trace", "demo-blank"];
-const themes: SheetConfig["theme"][] = ["none", "fairy", "unicorn", "princess"];
+const themes: SheetConfig["theme"][] = ["none", "enchanted"];
 const sizes: SheetConfig["size"][] = ["small", "medium", "large"];
 
 for (const layout of layouts) {

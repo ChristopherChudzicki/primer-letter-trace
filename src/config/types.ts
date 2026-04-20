@@ -1,7 +1,8 @@
 export type Layout = "single" | "multi";
 export type RowStyle = "combo" | "all-trace" | "demo-blank";
 export type Size = "small" | "medium" | "large";
-export type Theme = "none" | "fairy" | "unicorn" | "princess";
+export type Theme = "none" | "enchanted";
+// dinosaurs, vehicles planned as future themes — see AGENTS.md for how to add.
 export type PaperSize = "letter" | "a4";
 
 export interface SheetConfig {

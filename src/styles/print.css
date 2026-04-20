@@ -1,4 +1,8 @@
-@page { margin: 0.5in; }
+/* @page size/margin/orientation are injected at runtime (see ui/app.ts) so
+   they track the user's paperSize selection and Chrome's print dialog
+   pre-selects the matching paper. margin:0 is critical — the sheet already
+   renders its own 0.5in internal margin; doubling it scales the 8.5in sheet
+   to fit the 7.5in printable area. */
 
 @media print {
   html, body {

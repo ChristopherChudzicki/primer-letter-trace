@@ -18,8 +18,15 @@ export async function startApp(): Promise<void> {
 
   const store = new Store<SheetConfig>(configFromURL(new URL(window.location.href)));
 
+  // Dynamic @page size/orientation matches the user's paperSize selection,
+  // so the print dialog opens with the right defaults.
+  const pageStyle = document.createElement("style");
+  document.head.appendChild(pageStyle);
+
   store.run((config) => {
     document.body.dataset.paper = config.paperSize;
+    const pageSize = config.paperSize === "a4" ? "A4" : "letter";
+    pageStyle.textContent = `@page { size: ${pageSize} portrait; margin: 0; }`;
     const params = configToURLParams(config);
     window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
   });

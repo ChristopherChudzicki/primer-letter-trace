@@ -101,9 +101,7 @@ const FORM_HTML = `
     <fieldset class="field">
       <legend>Theme</legend>
       <label><input type="radio" name="theme" value="none" /> None</label>
-      <label><input type="radio" name="theme" value="fairy" /> Fairy</label>
-      <label><input type="radio" name="theme" value="unicorn" /> Unicorn</label>
-      <label><input type="radio" name="theme" value="princess" /> Princess</label>
+      <label><input type="radio" name="theme" value="enchanted" /> Enchanted</label>
     </fieldset>
 
     <fieldset class="field">
@@ -115,7 +113,8 @@ const FORM_HTML = `
 
   <button id="print-btn" type="button" class="print-btn">Print</button>
   <p class="tip">
-    Tip: in the print dialog, uncheck <em>Headers and footers</em> and
-    set margins to <em>None</em> or <em>Default</em> for cleanest output.
+    Tip: in the print dialog, use <em>Portrait</em> orientation,
+    set margins to <em>None</em>, and uncheck <em>Headers and footers</em>
+    for cleanest output.
   </p>
 `;
