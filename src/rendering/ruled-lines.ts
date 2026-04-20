@@ -12,11 +12,14 @@ export const CAP_HEIGHT_PX: Record<Size, number> = {
 };
 
 export interface LineGeometry {
-  headline: number;
-  midline: number;
-  baseline: number;
-  descenderLine: number;
-  fontSizePx: number;
+  // All y-coordinates in CSS px, measured from the top of the row box
+  // (y=0 is the top of the row, which is also the ascender line).
+  ascenderLine: number;    // tops of b, d, f, h, k, l, t reach here
+  headline: number;        // tops of capitals (A, B, C, ...)
+  midline: number;         // x-height line (tops of a, c, e, m, ...)
+  baseline: number;        // bottoms of letters without descenders
+  descenderLine: number;   // bottoms of descenders; also the row bottom
+  fontSizePx: number;      // font-size such that rendered cap-height = requested capHeightPx
 }
 
 export function computeLines(asset: FontAsset, capHeightPx: number): LineGeometry {
@@ -24,12 +27,21 @@ export function computeLines(asset: FontAsset, capHeightPx: number): LineGeometr
   const scale = fontSizePx / asset.unitsPerEm;
   const xHeightPx = asset.xHeight * scale;
   const descenderPx = asset.descender * scale;
+  const ascenderPx = asset.ascender * scale;
+
+  // Extra room above the headline for letters whose ascender exceeds cap-height.
+  // For Andika, ascender ≈ 1.22 × cap-height, so this is ~22% of cap-height.
+  const ascenderOverflow = Math.max(0, ascenderPx - capHeightPx);
+
+  const headline = ascenderOverflow;
+  const baseline = headline + capHeightPx;
 
   return {
-    headline: 0,
-    midline: capHeightPx - xHeightPx,
-    baseline: capHeightPx,
-    descenderLine: capHeightPx + descenderPx,
+    ascenderLine: 0,
+    headline,
+    midline: headline + capHeightPx - xHeightPx,
+    baseline,
+    descenderLine: baseline + descenderPx,
     fontSizePx,
   };
 }

@@ -11,7 +11,8 @@ const PAPER_DIMENSIONS: Record<PaperSize, { widthPx: number; heightPx: number }>
 };
 const MARGIN_PX = 0.5 * 96;
 const ROW_SPACING_PX = 0.25 * 96;
-const HEADER_ROOM_SINGLE_PX = 96;
+// Cap-height for the large word shown at the top of each single-item page.
+const HEADER_CAP_PX = 80;
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -69,7 +70,11 @@ function buildSingleLayout(
 ): HTMLElement[] {
   const rowHeight = singleRowHeight(asset, config.size);
   const rowStride = rowHeight + ROW_SPACING_PX;
-  const rowsPerPage = Math.max(1, Math.floor((printableHeight - HEADER_ROOM_SINGLE_PX) / rowStride));
+  const headerHeight = computeLines(asset, HEADER_CAP_PX).descenderLine;
+  const rowsPerPage = Math.max(
+    1,
+    Math.floor((printableHeight - headerHeight - ROW_SPACING_PX) / rowStride),
+  );
 
   const pages: HTMLElement[] = [];
   for (const line of config.content) {
@@ -80,9 +85,9 @@ function buildSingleLayout(
     const page = createPage(config.paperSize);
     const content = pageContentArea(page);
 
-    const header = renderHeader(asset, line, printableWidth);
-    header.style.marginBottom = `${ROW_SPACING_PX}px`;
-    content.appendChild(header);
+    const { svg: headerSvg } = renderHeader(asset, line, printableWidth);
+    headerSvg.style.marginBottom = `${ROW_SPACING_PX}px`;
+    content.appendChild(headerSvg);
 
     for (let r = 0; r < rowsPerPage; r++) {
       const row = renderRow({
@@ -125,28 +130,32 @@ function pageContentArea(page: HTMLElement): HTMLElement {
   return content;
 }
 
-function renderHeader(asset: FontAsset, item: string, widthPx: number): SVGSVGElement {
-  const headerCap = HEADER_ROOM_SINGLE_PX - 16;
+function renderHeader(asset: FontAsset, item: string, widthPx: number): {
+  svg: SVGSVGElement;
+  height: number;
+} {
+  // computeLines gives us ascender room above and descender room below, so
+  // letters with ascenders (b, d, f, h) or descenders (g, j, p, q, y) aren't clipped.
+  const geom = computeLines(asset, HEADER_CAP_PX);
   const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", `0 0 ${widthPx} ${HEADER_ROOM_SINGLE_PX}`);
+  svg.setAttribute("viewBox", `0 0 ${widthPx} ${geom.descenderLine}`);
   svg.setAttribute("width", `${widthPx}`);
-  svg.setAttribute("height", `${HEADER_ROOM_SINGLE_PX}`);
+  svg.setAttribute("height", `${geom.descenderLine}`);
   svg.classList.add("header");
 
-  const fontSize = (headerCap * asset.unitsPerEm) / asset.capHeight;
-  const widths = Array.from(item).map((c) => glyphPath(asset, c, fontSize).width);
+  const widths = Array.from(item).map((c) => glyphPath(asset, c, geom.fontSizePx).width);
   const totalWidth = widths.reduce((a, b) => a + b, 0);
   let cursorX = (widthPx - totalWidth) / 2;
 
   Array.from(item).forEach((c, idx) => {
-    const g = glyphPath(asset, c, fontSize, cursorX, headerCap + 8);
+    const g = glyphPath(asset, c, geom.fontSizePx, cursorX, geom.baseline);
     const p = document.createElementNS(SVG_NS, "path");
     p.setAttribute("d", g.pathD);
     p.setAttribute("fill", "currentColor");
     svg.appendChild(p);
     cursorX += widths[idx] ?? 0;
   });
-  return svg;
+  return { svg, height: geom.descenderLine };
 }
 
 function applyThemeChrome(page: HTMLElement, theme: ThemeDef): void {

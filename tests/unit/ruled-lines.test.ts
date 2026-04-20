@@ -23,10 +23,15 @@ describe("CAP_HEIGHT_PX presets", () => {
 });
 
 describe("computeLines", () => {
-  test("headline at y=0, baseline at requested cap-height", () => {
+  test("ascenderLine is y=0 and headline accommodates ascender overflow", () => {
     const geom = computeLines(asset, 72);
-    expect(geom.headline).toBe(0);
-    expect(geom.baseline).toBeCloseTo(72, 1);
+    expect(geom.ascenderLine).toBe(0);
+    expect(geom.headline).toBeGreaterThanOrEqual(0);
+  });
+
+  test("baseline minus headline equals requested cap-height", () => {
+    const geom = computeLines(asset, 72);
+    expect(geom.baseline - geom.headline).toBeCloseTo(72, 1);
   });
 
   test("midline sits between headline and baseline", () => {
