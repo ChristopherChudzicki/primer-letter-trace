@@ -87,7 +87,7 @@ const FORM_HTML = `
     <fieldset class="field">
       <legend>Row style</legend>
       <label><input type="radio" name="row" value="combo" /> Combo (demo + trace + blank)</label>
-      <label><input type="radio" name="row" value="all-trace" /> Trace</label>
+      <label><input type="radio" name="row" value="all-trace" /> Trace + blank</label>
       <label><input type="radio" name="row" value="demo-blank" /> Demo + blank</label>
     </fieldset>
 
