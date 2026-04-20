@@ -201,8 +201,14 @@ const FOOTPRINT = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
 </svg>`;
 
 const BONE = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-  <!-- Classic two-knob bone. -->
-  <path fill="currentColor" d="M8 14 Q 4 14 4 18 Q 4 22 8 22 L 10 22 L 38 26 L 40 26 Q 44 26 44 30 Q 44 34 40 34 Q 44 38 40 40 Q 36 42 34 38 L 32 38 L 12 32 Q 10 36 6 34 Q 2 32 4 28 Q 0 24 4 22 Q 4 18 8 18 Q 8 14 12 14 Q 16 14 14 18 L 14 20 Z"/>
+  <!-- Classic dumbbell bone: two round knobs per end, straight shaft between. -->
+  <g fill="currentColor">
+    <circle cx="10" cy="20" r="6"/>
+    <circle cx="10" cy="28" r="6"/>
+    <circle cx="38" cy="20" r="6"/>
+    <circle cx="38" cy="28" r="6"/>
+    <rect x="10" y="20" width="28" height="8"/>
+  </g>
 </svg>`;
 
 // Footprint trail — 3-toed theropod tracks alternating left/right.
