@@ -125,8 +125,9 @@ const FORM_HTML = `
 
   <button id="print-btn" type="button" class="print-btn">Print</button>
   <p class="tip">
-    Tip: use <em>Portrait</em> orientation. If your browser's print dialog
-    shows a <em>Headers and footers</em> option, uncheck it — some browsers
-    hide it automatically, others leave it on.
+    Tip: use <em>Portrait</em> orientation and set margins to <em>None</em>.
+    If your browser's print dialog shows a <em>Headers and footers</em>
+    option, uncheck it — some browsers hide it automatically, others leave
+    it on.
   </p>
 `;
