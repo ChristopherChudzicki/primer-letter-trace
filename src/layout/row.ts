@@ -6,7 +6,9 @@ import ANDIKA_SKELETONS from "../rendering/skeletons/andika";
 import type { SkeletonSet } from "../rendering/skeletons/types";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const LETTER_GAP_EM = 0.35;
+// Extra horizontal space BETWEEN repetitions of a word on the same row.
+// Within a word, letters follow their natural advance widths (no extra gap).
+const SLOT_GAP_EM = 0.5;
 
 // Single skeleton set for now. When we add more fonts we'll pick based on the
 // font in use; the rest of the code just takes whichever SkeletonSet matches.
@@ -14,7 +16,8 @@ const SKELETONS: SkeletonSet = ANDIKA_SKELETONS;
 
 interface RowOptions {
   asset: FontAsset;
-  char: string;
+  /** The content of this row — may be a single letter, a whole word, or "" (blank row). */
+  line: string;
   rowStyle: RowStyle;
   size: Size;
   widthPx: number;
@@ -35,40 +38,78 @@ export function renderRow(opts: RowOptions): SVGSVGElement {
   appendLine(svg, 0, geom.midline, opts.widthPx, geom.midline, opts.ruleColor, "dashed");
   appendLine(svg, 0, geom.baseline, opts.widthPx, geom.baseline, opts.ruleColor, "solid");
 
-  const sample = glyphPath(opts.asset, opts.char, geom.fontSizePx);
-  const gapPx = geom.fontSizePx * LETTER_GAP_EM;
-  const slotWidth = sample.width + gapPx;
-  const slotsAvailable = Math.max(1, Math.floor(opts.widthPx / slotWidth));
+  // Blank line: just ruled lines, no letters.
+  if (opts.line === "") return svg;
 
-  let slots: Array<"solid" | "dashed" | "blank"> = [];
+  const lineWidth = computeLineWidth(opts.asset, opts.line, geom.fontSizePx);
+  const slotGap = geom.fontSizePx * SLOT_GAP_EM;
+  const slotWidth = lineWidth + slotGap;
+  // How many slots will fit across the row. 1 minimum — if a word is wider
+  // than the printable width, we still show it (user opted into overflow).
+  const slotsThatFit = Math.max(1, Math.floor(opts.widthPx / slotWidth));
+
+  // Each row style has a set of "functional" slots that must always render,
+  // regardless of available width (so a wide word still shows demo + trace).
+  // Extra width is filled with blank slots for free-copy space.
+  let slots: Array<"solid" | "dashed" | "blank">;
   switch (opts.rowStyle) {
     case "combo":
       slots = ["solid", "dashed", "dashed"];
-      while (slots.length < slotsAvailable) slots.push("blank");
       break;
     case "all-trace":
-      slots = new Array(slotsAvailable).fill("dashed");
+      slots = ["dashed"];
       break;
     case "demo-blank":
       slots = ["solid"];
-      while (slots.length < slotsAvailable) slots.push("blank");
       break;
   }
+  while (slots.length < slotsThatFit) {
+    slots.push(opts.rowStyle === "all-trace" ? "dashed" : "blank");
+  }
 
-  slots.slice(0, slotsAvailable).forEach((kind, i) => {
+  slots.forEach((kind, i) => {
     if (kind === "blank") return;
-    const x = i * slotWidth;
-    const path = glyphPath(opts.asset, opts.char, geom.fontSizePx, x, geom.baseline);
-    if (kind === "solid") {
-      appendFilledGlyph(svg, path.pathD, "currentColor");
-    } else {
-      // Trace letter: pale ghost fill + dashed centerline skeleton on top.
-      appendFilledGlyph(svg, path.pathD, "rgba(0, 0, 0, 0.13)");
-      appendSkeleton(svg, opts.char, geom.fontSizePx, x, geom.baseline);
-    }
+    const startX = i * slotWidth;
+    renderLineAt(svg, opts.asset, opts.line, geom.fontSizePx, startX, geom.baseline, kind);
   });
 
   return svg;
+}
+
+/** Sum of advance widths for all characters of the line at the given font-size. */
+function computeLineWidth(asset: FontAsset, line: string, fontSizePx: number): number {
+  let total = 0;
+  for (const char of Array.from(line)) {
+    total += glyphPath(asset, char, fontSizePx).width;
+  }
+  return total;
+}
+
+/**
+ * Render each character of `line` starting at `startX` on `baselineY`.
+ * Kind = "solid": filled glyph only.
+ * Kind = "dashed": pale ghost fill + dashed centerline skeleton on top.
+ */
+function renderLineAt(
+  svg: SVGSVGElement,
+  asset: FontAsset,
+  line: string,
+  fontSizePx: number,
+  startX: number,
+  baselineY: number,
+  kind: "solid" | "dashed",
+): void {
+  let cursorX = startX;
+  for (const char of Array.from(line)) {
+    const g = glyphPath(asset, char, fontSizePx, cursorX, baselineY);
+    if (kind === "solid") {
+      appendFilledGlyph(svg, g.pathD, "currentColor");
+    } else {
+      appendFilledGlyph(svg, g.pathD, "rgba(0, 0, 0, 0.13)");
+      appendSkeleton(svg, char, fontSizePx, cursorX, baselineY);
+    }
+    cursorX += g.width;
+  }
 }
 
 function appendLine(
@@ -96,17 +137,6 @@ function appendFilledGlyph(svg: SVGSVGElement, d: string, fill: string): void {
   svg.appendChild(p);
 }
 
-/**
- * Render a single-stroke centerline (the skeleton) for a character.
- *
- * The skeleton path data is in font units with y-up (opentype convention).
- * We transform at render time: translate to the glyph's origin on the
- * baseline, then scale by (fontSizePx / unitsPerEm, -fontSizePx / unitsPerEm)
- * to map into SVG coordinates (y-down).
- *
- * `vector-effect: non-scaling-stroke` keeps stroke-width and dasharray in
- * the final SVG pixel space, independent of the transform scale.
- */
 function appendSkeleton(
   svg: SVGSVGElement,
   char: string,

@@ -7,8 +7,11 @@ describe("configFromURL", () => {
     expect(configFromURL(new URL("http://x/"))).toEqual(DEFAULT_CONFIG);
   });
 
-  test("parses all fields from query string", () => {
-    const url = new URL("http://x/?content=A+B+C&layout=single&row=all-trace&size=large&theme=fairy&paper=a4");
+  test("parses all fields from query string (newline-separated content)", () => {
+    // Content encoded with newlines — URLSearchParams uses %0A for '\n'.
+    const url = new URL(
+      "http://x/?content=A%0AB%0AC&layout=single&row=all-trace&size=large&theme=fairy&paper=a4",
+    );
     expect(configFromURL(url)).toEqual({
       content: ["A", "B", "C"],
       layout: "single",
@@ -35,7 +38,7 @@ describe("configFromURL", () => {
 describe("configToURLParams", () => {
   test("round-trips a non-default config", () => {
     const original: SheetConfig = {
-      content: ["Aa", "Bb", "Cc"],
+      content: ["CAT", "", "BAT"],
       layout: "single",
       rowStyle: "demo-blank",
       size: "large",

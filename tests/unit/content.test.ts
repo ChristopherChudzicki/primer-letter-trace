@@ -2,24 +2,30 @@ import { describe, test, expect } from "vitest";
 import { parseContent, PRESETS, presetToText } from "../../src/config/content";
 
 describe("parseContent", () => {
-  test("splits single-space-separated items", () => {
-    expect(parseContent("A B C")).toEqual(["A", "B", "C"]);
+  test("splits newline-separated items", () => {
+    expect(parseContent("A\nB\nC")).toEqual(["A", "B", "C"]);
   });
 
-  test("collapses runs of whitespace", () => {
-    expect(parseContent("A  B\tC\n D")).toEqual(["A", "B", "C", "D"]);
+  test("keeps whole words on a single line intact", () => {
+    expect(parseContent("CAT\nBAT")).toEqual(["CAT", "BAT"]);
   });
 
-  test("trims leading and trailing whitespace", () => {
-    expect(parseContent("  A B  ")).toEqual(["A", "B"]);
+  test("trims whitespace within each line", () => {
+    expect(parseContent("  A  \nB\n  C ")).toEqual(["A", "B", "C"]);
   });
 
-  test("keeps multi-character items intact", () => {
-    expect(parseContent("Aa Bb Cc")).toEqual(["Aa", "Bb", "Cc"]);
+  test("preserves internal empty lines as empty items", () => {
+    expect(parseContent("CAT\n\nBAT")).toEqual(["CAT", "", "BAT"]);
   });
 
-  test("returns empty array for empty or whitespace-only input", () => {
+  test("preserves trailing empty lines", () => {
+    expect(parseContent("CAT\n\nBAT\n")).toEqual(["CAT", "", "BAT", ""]);
+    expect(parseContent("A\nB\n\n")).toEqual(["A", "B", "", ""]);
+  });
+
+  test("returns empty array for input with no non-whitespace content", () => {
     expect(parseContent("")).toEqual([]);
+    expect(parseContent("\n\n\n")).toEqual([]);
     expect(parseContent("   \t  ")).toEqual([]);
   });
 });
@@ -33,17 +39,16 @@ describe("presets", () => {
     expect(PRESETS.lowercase.join("")).toBe("abcdefghijklmnopqrstuvwxyz");
   });
 
-  test("pairs are Aa through Zz", () => {
-    expect(PRESETS.pairs[0]).toBe("Aa");
-    expect(PRESETS.pairs[25]).toBe("Zz");
-    expect(PRESETS.pairs).toHaveLength(26);
+  test("pairs alternate uppercase and lowercase one per item", () => {
+    expect(PRESETS.pairs.slice(0, 4)).toEqual(["A", "a", "B", "b"]);
+    expect(PRESETS.pairs).toHaveLength(52);
   });
 
   test("digits are 0-9", () => {
     expect(PRESETS.digits).toEqual(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
   });
 
-  test("presetToText joins with single spaces", () => {
-    expect(presetToText("digits")).toBe("0 1 2 3 4 5 6 7 8 9");
+  test("presetToText joins with newlines", () => {
+    expect(presetToText("digits")).toBe("0\n1\n2\n3\n4\n5\n6\n7\n8\n9");
   });
 });

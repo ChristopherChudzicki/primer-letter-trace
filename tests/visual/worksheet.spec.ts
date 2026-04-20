@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
 import type { SheetConfig } from "../../src/config/types";
 
-const SAMPLE_CONTENT = "Aa Bb Cc";
+// Six lines — gives a comparable visual to the previous "Aa Bb Cc" flat-mapped
+// to six rows, but under the newline-per-line semantic.
+const SAMPLE_CONTENT = "A\na\nB\nb\nC\nc";
 
 function urlFor(partial: Partial<SheetConfig>): string {
   const params = new URLSearchParams();
-  params.set("content", partial.content?.join(" ") ?? SAMPLE_CONTENT);
+  params.set("content", partial.content?.join("\n") ?? SAMPLE_CONTENT);
   params.set("layout", partial.layout ?? "multi");
   params.set("row", partial.rowStyle ?? "combo");
   params.set("size", partial.size ?? "medium");

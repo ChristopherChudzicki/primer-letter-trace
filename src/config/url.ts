@@ -32,7 +32,7 @@ export function configFromURL(url: URL): SheetConfig {
 
 export function configToURLParams(config: SheetConfig): URLSearchParams {
   const p = new URLSearchParams();
-  p.set("content", config.content.join(" "));
+  p.set("content", config.content.join("\n"));
   p.set("layout", config.layout);
   p.set("row", config.rowStyle);
   p.set("size", config.size);

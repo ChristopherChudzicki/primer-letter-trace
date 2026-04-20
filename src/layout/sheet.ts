@@ -24,8 +24,7 @@ export function buildSheets(asset: FontAsset, config: SheetConfig): HTMLElement[
   if (config.content.length === 0) return [];
 
   if (config.layout === "multi") {
-    const chars = config.content.flatMap((item) => Array.from(item));
-    return buildMultiLayout(asset, config, theme, chars, printableWidth, printableHeight);
+    return buildMultiLayout(asset, config, theme, config.content, printableWidth, printableHeight);
   }
   return buildSingleLayout(asset, config, theme, printableWidth, printableHeight);
 }
@@ -34,7 +33,7 @@ function buildMultiLayout(
   asset: FontAsset,
   config: SheetConfig,
   theme: ThemeDef,
-  chars: string[],
+  lines: readonly string[],
   printableWidth: number,
   printableHeight: number,
 ): HTMLElement[] {
@@ -43,13 +42,13 @@ function buildMultiLayout(
   const rowsPerPage = Math.max(1, Math.floor(printableHeight / rowStride));
 
   const pages: HTMLElement[] = [];
-  for (let i = 0; i < chars.length; i += rowsPerPage) {
-    const chunk = chars.slice(i, i + rowsPerPage);
+  for (let i = 0; i < lines.length; i += rowsPerPage) {
+    const chunk = lines.slice(i, i + rowsPerPage);
     const page = createPage(config.paperSize);
     const content = pageContentArea(page);
-    for (const ch of chunk) {
+    for (const line of chunk) {
       const row = renderRow({
-        asset, char: ch, rowStyle: config.rowStyle, size: config.size,
+        asset, line, rowStyle: config.rowStyle, size: config.size,
         widthPx: printableWidth, ruleColor: theme.ruleColor,
       });
       row.style.marginBottom = `${ROW_SPACING_PX}px`;
@@ -73,20 +72,21 @@ function buildSingleLayout(
   const rowsPerPage = Math.max(1, Math.floor((printableHeight - HEADER_ROOM_SINGLE_PX) / rowStride));
 
   const pages: HTMLElement[] = [];
-  for (const item of config.content) {
+  for (const line of config.content) {
+    // Single-layout treats each non-empty line as its own page. Blank lines
+    // are meaningful as row separators in multi-layout, but as pages they'd
+    // be empty pages — skip them.
+    if (line === "") continue;
     const page = createPage(config.paperSize);
     const content = pageContentArea(page);
 
-    const header = renderHeader(asset, item, printableWidth);
+    const header = renderHeader(asset, line, printableWidth);
     header.style.marginBottom = `${ROW_SPACING_PX}px`;
     content.appendChild(header);
 
-    const itemChars = Array.from(item);
     for (let r = 0; r < rowsPerPage; r++) {
-      const ch = itemChars[r % itemChars.length];
-      if (!ch) continue;
       const row = renderRow({
-        asset, char: ch, rowStyle: config.rowStyle, size: config.size,
+        asset, line, rowStyle: config.rowStyle, size: config.size,
         widthPx: printableWidth, ruleColor: theme.ruleColor,
       });
       row.style.marginBottom = `${ROW_SPACING_PX}px`;
