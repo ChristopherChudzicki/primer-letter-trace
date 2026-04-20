@@ -16,8 +16,11 @@ export function bindForm(root: HTMLElement, store: Store<SheetConfig>): void {
   const printButton = root.querySelector<HTMLButtonElement>("#print-btn")!;
 
   store.run((config) => {
-    const desired = config.content.join(" ");
-    if (parseContent(contentField.value).join(" ") !== desired) {
+    // Textbox is the single source of truth for content layout: one line per
+    // item (newline = new row). Don't collapse to spaces on display — that
+    // would misrepresent what the sheet actually renders.
+    const desired = config.content.join("\n");
+    if (parseContent(contentField.value).join("\n") !== desired) {
       contentField.value = desired;
     }
     setRadio(layoutGroup, config.layout);
