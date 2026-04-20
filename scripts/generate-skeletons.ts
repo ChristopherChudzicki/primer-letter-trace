@@ -166,31 +166,50 @@ function polylineLength(p: Polyline): number {
   return sum;
 }
 
-/** True if either endpoint of a is within `tol` of either endpoint of b. */
-function endpointsConnected(a: Polyline, b: Polyline, tol: number): boolean {
-  const ends: [[number, number], [number, number]] = [
-    a.points[0]!,
-    a.points[a.points.length - 1]!,
-  ];
-  const oEnds: [[number, number], [number, number]] = [
-    b.points[0]!,
-    b.points[b.points.length - 1]!,
-  ];
-  for (const ae of ends) {
-    for (const be of oEnds) {
-      if (Math.hypot(ae[0] - be[0], ae[1] - be[1]) < tol) return true;
-    }
+/** True if the given endpoint of polyline is within `tol` of any endpoint of `others`. */
+function endpointHasNeighbor(
+  endpoint: [number, number],
+  others: Polyline[],
+  tol: number,
+): boolean {
+  for (const other of others) {
+    const start = other.points[0]!;
+    const end = other.points[other.points.length - 1]!;
+    if (Math.hypot(endpoint[0] - start[0], endpoint[1] - start[1]) < tol) return true;
+    if (Math.hypot(endpoint[0] - end[0], endpoint[1] - end[1]) < tol) return true;
   }
   return false;
 }
 
+type EndpointClass = "isolated" | "spur" | "junction";
+
 /**
- * Drop short polylines that are attached to another polyline by an endpoint —
- * these are typically spur artifacts from thinning at sharp junctions (the
- * little Y-spike at the top of W, for example).
- *
- * Short isolated polylines (no connected neighbors) are kept, so dots on i/j
- * and tiny free-standing strokes survive.
+ * Classify a short polyline by its endpoint connectivity to other polylines:
+ * - `junction`: both ends coincide with other polylines' endpoints (e.g., the
+ *   crossing segment at the center of an X — must be kept to connect arms).
+ * - `spur`: exactly one end is connected; the other end dangles (e.g., the
+ *   Y-spike artifact at the top of W).
+ * - `isolated`: neither end is connected (e.g., the dot on i or j).
+ */
+function classifyEndpoints(
+  p: Polyline,
+  allPolylines: Polyline[],
+  tol: number,
+): EndpointClass {
+  const others = allPolylines.filter((other) => other !== p);
+  const start = p.points[0]!;
+  const end = p.points[p.points.length - 1]!;
+  const startConnected = endpointHasNeighbor(start, others, tol);
+  const endConnected = endpointHasNeighbor(end, others, tol);
+  if (startConnected && endConnected) return "junction";
+  if (startConnected || endConnected) return "spur";
+  return "isolated";
+}
+
+/**
+ * Drop short spur polylines that dangle off a junction (thinning artifacts).
+ * Keep short junction pieces (crossings like X's center) and short isolated
+ * strokes (dots on i/j).
  */
 function pruneSpurs(
   polylines: Polyline[],
@@ -199,11 +218,7 @@ function pruneSpurs(
 ): Polyline[] {
   return polylines.filter((p) => {
     if (polylineLength(p) >= minLengthUnits) return true;
-    // Short: only keep if isolated.
-    const connected = polylines.some(
-      (other) => other !== p && endpointsConnected(p, other, connectToleranceUnits),
-    );
-    return !connected;
+    return classifyEndpoints(p, polylines, connectToleranceUnits) !== "spur";
   });
 }
 
