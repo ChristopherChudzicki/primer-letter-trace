@@ -16,7 +16,6 @@ const content = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 const params = new URLSearchParams({
   content,
-  layout: "multi",
   demo: "1",
   trace: "2",
   size: "medium",

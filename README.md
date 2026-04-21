@@ -6,11 +6,10 @@ Printable letter, number, and handwriting practice sheets for young learners. Tr
 
 ## Printing tips
 
-For cleanest output in Chrome:
-1. In the print dialog, open **More settings**.
-2. Under **Margins**, choose **Default** (or **None**).
-3. Uncheck **Headers and footers**.
-4. Check **Background graphics** if you want theme colors to print.
+For cleanest output:
+1. Use **Portrait** orientation.
+2. Under **Margins**, choose **None** (the app handles its own 0.5in margins).
+3. If your browser shows a **Headers and footers** checkbox, uncheck it. Chrome hides this automatically when `@page { margin: 0 }` is set; Safari leaves it visible.
 
 The app uses physical CSS units (inches, mm) so printed letter sizes match the Small/Medium/Large presets.
 
@@ -19,10 +18,10 @@ The app uses physical CSS units (inches, mm) so printed letter sizes match the S
 Every control is reflected in the URL, so any sheet is shareable. Example:
 
 ```
-?content=Aa%0ABb%0ACc&layout=multi&row=combo&size=medium&theme=fairy&paper=letter
+?content=Aa%0ABb%0ACc&demo=1&trace=2&size=medium&theme=enchanted&paper=letter
 ```
 
-Content is newline-separated (URL-encoded as `%0A`). One line = one row (multi layout) or one page (single-item layout).
+Content is newline-separated (URL-encoded as `%0A`) — one line becomes one row on the printed sheet.
 
 ## How it works
 
@@ -77,7 +76,7 @@ npm run test:e2e         # Visual regression (Playwright)
 npm run test:e2e:update  # Regenerate Playwright snapshots (after intentional rendering changes)
 ```
 
-Unit tests cover pure logic: URL encode/decode round-trip, content parsing, font-metric math, glyph path generation, store subscription. Visual regression covers the 2 × 3 × 4 grid of (layout × row-style × theme) plus a 3-size sweep.
+Unit tests cover pure logic: URL encode/decode round-trip, content parsing, starter presets, font-metric math, glyph path generation, store subscription. Visual regression covers three representative row variants (demo+trace, demo-only, trace-only) across all four themes plus a 3-size sweep — 15 snapshots in total.
 
 ### Skeleton pipeline
 
@@ -102,9 +101,9 @@ This is a **commit-the-output** pipeline, not a CI-time step. Rerun only when th
 
 ### Common tasks
 
-**Add a theme.** Add an entry to `THEMES` in `src/theming/themes.ts` (ruleColor, accentColor, inline SVG ornament), and add the theme id to the `Theme` union in `src/config/types.ts` and the `THEMES` array in `src/config/url.ts`. Add a radio to the form in `src/ui/form.ts`. Update Playwright test `themes` array.
+**Add a theme.** Add an entry to `THEMES` in `src/theming/themes.ts` (palette + motif library), and add the theme id to the `Theme` union in `src/config/types.ts` and the `THEMES` array in `src/config/url.ts`. Add a radio to the form in `src/ui/form.ts`. Update Playwright test `themes` array, then regenerate snapshots.
 
-**Add a row style.** New entry in `RowStyle` union (`src/config/types.ts`), `ROW_STYLES` in URL codec, form radio, and a case in the `switch` in `src/layout/row.ts`.
+**Add a starter preset.** Add a `{key, label, config}` entry to `PRESETS` in `src/config/presets.ts`. The form dropdown and `presetByKey` lookup pick it up automatically. TypeScript ensures the `config` field stays in sync with `SheetConfig`.
 
 **Add a new font.** Place the TTF in `public/`, point `generate-skeletons` at it (or add a second `generate:skeletons:<name>` script), generate into a new `src/rendering/skeletons/<name>.ts`. Teach `row.ts` to select the right skeleton set based on current font. Update `@font-face` in `src/styles/main.css`.
 
@@ -118,6 +117,7 @@ This is a **commit-the-output** pipeline, not a CI-time step. Rerun only when th
 - `npm run test:e2e` — Playwright visual regression
 - `npm run test:e2e:update` — regenerate visual snapshots
 - `npm run generate:skeletons` — regenerate centerline skeletons from the bundled font
+- `npm run generate:og` — regenerate `public/og.png` from the live dev server (run `npm run dev` first)
 
 ## Font credit
 

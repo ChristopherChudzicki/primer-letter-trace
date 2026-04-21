@@ -47,7 +47,6 @@ export const PRESETS: readonly Preset[] = [
     label: "A–Z tracing (single page)",
     config: {
       content: AZ_SINGLE_PAGE,
-      layout: "multi",
       showDemo: false,
       traceCount: 1,
       size: "large",
@@ -60,7 +59,6 @@ export const PRESETS: readonly Preset[] = [
     label: "Aa–Zz tracing (single page)",
     config: {
       content: AA_ZZ_SINGLE_PAGE,
-      layout: "multi",
       showDemo: false,
       traceCount: 1,
       size: "medium",
@@ -73,7 +71,6 @@ export const PRESETS: readonly Preset[] = [
     label: "Aa–Zz (one pair per row)",
     config: {
       content: AA_ZZ_ONE_PER_ROW,
-      layout: "multi",
       showDemo: true,
       traceCount: 2,
       size: "medium",

@@ -10,11 +10,10 @@ describe("configFromURL", () => {
   test("parses all fields from query string (newline-separated content)", () => {
     // Content encoded with newlines — URLSearchParams uses %0A for '\n'.
     const url = new URL(
-      "http://x/?content=A%0AB%0AC&layout=single&demo=0&trace=1&size=large&theme=enchanted&paper=a4",
+      "http://x/?content=A%0AB%0AC&demo=0&trace=1&size=large&theme=enchanted&paper=a4",
     );
     expect(configFromURL(url)).toEqual({
       content: ["A", "B", "C"],
-      layout: "single",
       showDemo: false,
       traceCount: 1,
       size: "large",
@@ -29,10 +28,10 @@ describe("configFromURL", () => {
   });
 
   test("ignores invalid enum values and uses defaults", () => {
-    const url = new URL("http://x/?layout=banana&size=enormous");
+    const url = new URL("http://x/?size=enormous&theme=banana");
     const config = configFromURL(url);
-    expect(config.layout).toBe(DEFAULT_CONFIG.layout);
     expect(config.size).toBe(DEFAULT_CONFIG.size);
+    expect(config.theme).toBe(DEFAULT_CONFIG.theme);
   });
 
   test("empty content falls back to default", () => {
@@ -45,7 +44,6 @@ describe("configToURLParams", () => {
   test("round-trips a non-default config", () => {
     const original: SheetConfig = {
       content: ["CAT", "", "BAT"],
-      layout: "single",
       showDemo: true,
       traceCount: 0,
       size: "large",

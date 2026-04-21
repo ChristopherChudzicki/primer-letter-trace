@@ -8,7 +8,6 @@ export function bindForm(root: HTMLElement, store: Store<SheetConfig>): void {
 
   const starterField = root.querySelector<HTMLSelectElement>("#starter")!;
   const contentField = root.querySelector<HTMLTextAreaElement>("#content")!;
-  const layoutGroup = root.querySelectorAll<HTMLInputElement>("input[name='layout']");
   const demoGroup = root.querySelectorAll<HTMLInputElement>("input[name='demo']");
   const traceGroup = root.querySelectorAll<HTMLInputElement>("input[name='trace']");
   const sizeGroup = root.querySelectorAll<HTMLInputElement>("input[name='size']");
@@ -24,7 +23,6 @@ export function bindForm(root: HTMLElement, store: Store<SheetConfig>): void {
     if (parseContent(contentField.value).join("\n") !== desired) {
       contentField.value = desired;
     }
-    setRadio(layoutGroup, config.layout);
     setRadio(demoGroup, config.showDemo ? "yes" : "no");
     setRadio(traceGroup, String(config.traceCount));
     setRadio(sizeGroup, config.size);
@@ -42,7 +40,6 @@ export function bindForm(root: HTMLElement, store: Store<SheetConfig>): void {
     store.update({ content: parseContent(contentField.value) });
   });
 
-  bindRadioGroup(layoutGroup, (v) => store.update({ layout: v as SheetConfig["layout"] }));
   bindRadioGroup(demoGroup, (v) => store.update({ showDemo: v === "yes" }));
   bindRadioGroup(traceGroup, (v) => store.update({ traceCount: Number(v) as SheetConfig["traceCount"] }));
   bindRadioGroup(sizeGroup, (v) => store.update({ size: v as SheetConfig["size"] }));
@@ -89,12 +86,6 @@ function buildFormHtml(): string {
         <span class="field__label">Content</span>
         <textarea id="content" rows="6" spellcheck="false"></textarea>
       </label>
-
-      <fieldset class="field">
-        <legend>Page layout</legend>
-        <label><input type="radio" name="layout" value="multi" /> Multiple items per page</label>
-        <label><input type="radio" name="layout" value="single" /> One item per page</label>
-      </fieldset>
 
       <fieldset class="field">
         <legend>Show demo</legend>

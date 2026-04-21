@@ -1,10 +1,9 @@
 import {
-  SheetConfig, Layout, Size, Theme, PaperSize, TraceCount, TRACE_COUNTS,
+  SheetConfig, Size, Theme, PaperSize, TraceCount, TRACE_COUNTS,
   DEFAULT_CONFIG,
 } from "./types";
 import { parseContent } from "./content";
 
-const LAYOUTS: readonly Layout[] = ["single", "multi"] as const;
 const SIZES: readonly Size[] = ["small", "medium", "large"] as const;
 const THEMES: readonly Theme[] = ["none", "enchanted", "dinosaurs", "vehicles"] as const;
 const PAPER_SIZES: readonly PaperSize[] = ["letter", "a4"] as const;
@@ -33,7 +32,6 @@ export function configFromURL(url: URL): SheetConfig {
   const parsed = parseContent(p.get("content") ?? "");
   return {
     content: parsed.length > 0 ? parsed : DEFAULT_CONFIG.content,
-    layout: coerce(p.get("layout"), LAYOUTS, DEFAULT_CONFIG.layout),
     showDemo: coerceBool(p.get("demo"), DEFAULT_CONFIG.showDemo),
     traceCount: coerceTraceCount(p.get("trace"), DEFAULT_CONFIG.traceCount),
     size: coerce(p.get("size"), SIZES, DEFAULT_CONFIG.size),
@@ -45,7 +43,6 @@ export function configFromURL(url: URL): SheetConfig {
 export function configToURLParams(config: SheetConfig): URLSearchParams {
   const p = new URLSearchParams();
   p.set("content", config.content.join("\n"));
-  p.set("layout", config.layout);
   p.set("demo", config.showDemo ? "1" : "0");
   p.set("trace", String(config.traceCount));
   p.set("size", config.size);

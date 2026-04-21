@@ -54,14 +54,16 @@ Highlights to remember:
 - Types first: `src/config/types.ts` defines `SheetConfig` and its constituent unions.
 - URL round-trip: `src/config/url.ts`. Newline-separated content; `\n` → `%0A`.
 - Row composition: `src/layout/row.ts`. Each row draws ruled lines + word-slots; each slot is solid demo, dashed trace (skeleton + ghost fill), or blank.
-- Sheet composition: `src/layout/sheet.ts`. Two layouts — `multi` (one row per line) and `single` (one page per non-empty line with a large header).
+- Sheet composition: `src/layout/sheet.ts`. Each line in `config.content` becomes one row; rows are packed into pages top-to-bottom.
+- Starters: `src/config/presets.ts`. A typed list of `{key, label, config: SheetConfig}` entries; the form dropdown maps selection → `store.set(preset.config)`.
 
 ## Common traps
 
 - **Stroke width under transforms.** Skeleton paths are transformed with `scale(s, -s)` to map font units to SVG pixels. Stroke-width and stroke-dasharray would be scaled too; avoid by always using `vector-effect: non-scaling-stroke` on stroked skeleton paths.
 - **SVG viewBox must include ascender overflow.** Letters like `f`, `h`, `b`, `l`, `t` reach above cap-height in Andika. `computeLines()` already accounts for this via `ascenderLine` at y=0 and `headline` below it; don't bypass it.
+- **Row geometry uses measured letter bounds, not font metrics.** `FontAsset.ascender`/`descender` are the tightest box over A–Z/a–z/0–9 (computed at load time in `font.ts`) — not the font's linguistic `ascender`/`descender` values, which for Andika include diacritic room we never use.
 - **Empty content lines are meaningful.** Blank lines produce blank ruled-line rows. Trailing blank lines are preserved. Don't strip them in `parseContent`.
-- **Presets are arrays of strings, joined by newline.** Not space-joined.
+- **Motifs must fit the margin strip.** `placement.ts` caps rendered motif size so that at ±12° rotation the bounding box stays within `marginPx`. Raising `BASE_MOTIF_PX` or max `scale` without matching the cap will push motifs off the page or into content.
 
 ## When a skill is available
 
@@ -72,7 +74,7 @@ If `superpowers:brainstorming`, `superpowers:writing-plans`, or `superpowers:exe
 ```bash
 npm test                 # Vitest, ~1s
 npm run test:e2e         # Playwright, builds + runs against dist, ~15s
-npm run test:e2e:update  # Regenerate 27 snapshots
+npm run test:e2e:update  # Regenerate 15 snapshots
 npm run generate:skeletons  # Regenerate centerline data
 npx tsc -b --noEmit      # Type check without build
 ```

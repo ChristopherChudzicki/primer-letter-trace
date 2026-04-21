@@ -20,16 +20,11 @@ export interface ThemeDef {
     ruleColor: string;
     /** Larger / more prominent motifs. */
     primary: string;
-    /** Smaller / sparkle motifs, and header decoration. */
+    /** Smaller / sparkle motifs. */
     accent: string;
   };
   /** Library of motifs available to the placement engine. */
   motifs: Motif[];
-  /**
-   * Short decorative strip placed under the big word in single-item layout.
-   * viewBox should be 0 0 200 12 (wide strip, thin). "" if no decoration.
-   */
-  headerDecoration: string;
 }
 
 // ---------- SVG motif library ----------
@@ -104,17 +99,6 @@ const FLOWER = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
   <circle fill="currentColor" cx="16" cy="34" r="7"/>
   <circle fill="currentColor" cx="12" cy="20" r="7"/>
   <circle fill="#fff" cx="24" cy="24" r="5"/>
-</svg>`;
-
-// Header decoration strip: little stars in a line.
-const STAR_TRAIL = `<svg viewBox="0 0 200 12" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-  <g fill="currentColor">
-    <path d="M20 6 l1.5 3 3 .5-2.2 2 .6 3L20 13l-2.9 1.5.6-3-2.2-2 3-.5z"/>
-    <path d="M50 6 l1 2 2 .3-1.5 1.3.4 2L50 10.8 48.1 11.6l.4-2L47 8.3l2-.3z"/>
-    <path d="M100 6 l2 4 4.5.6-3 2.7.8 4L100 15.3l-4.3 2 .8-4-3-2.7 4.5-.6z"/>
-    <path d="M150 6 l1 2 2 .3-1.5 1.3.4 2L150 10.8 148.1 11.6l.4-2L147 8.3l2-.3z"/>
-    <path d="M180 6 l1.5 3 3 .5-2.2 2 .6 3L180 13l-2.9 1.5.6-3-2.2-2 3-.5z"/>
-  </g>
 </svg>`;
 
 // ---------- Dinosaur motifs ----------
@@ -208,37 +192,6 @@ const BONE = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
     <circle cx="38" cy="20" r="6"/>
     <circle cx="38" cy="28" r="6"/>
     <rect x="10" y="20" width="28" height="8"/>
-  </g>
-</svg>`;
-
-// Footprint trail — 3-toed theropod tracks alternating left/right.
-const FOOTPRINT_TRAIL = `<svg viewBox="0 0 200 12" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-  <g fill="currentColor">
-    <!-- each track is a small triangle of toes + pad; drawn at various x. -->
-    <g transform="translate(10 6)">
-      <circle cx="-2" cy="-2" r="0.9"/><circle cx="0" cy="-3" r="0.9"/><circle cx="2" cy="-2" r="0.9"/>
-      <ellipse cx="0" cy="1.2" rx="1.8" ry="1.2"/>
-    </g>
-    <g transform="translate(45 7)">
-      <circle cx="-2" cy="-2" r="0.9"/><circle cx="0" cy="-3" r="0.9"/><circle cx="2" cy="-2" r="0.9"/>
-      <ellipse cx="0" cy="1.2" rx="1.8" ry="1.2"/>
-    </g>
-    <g transform="translate(80 5)">
-      <circle cx="-2" cy="-2" r="0.9"/><circle cx="0" cy="-3" r="0.9"/><circle cx="2" cy="-2" r="0.9"/>
-      <ellipse cx="0" cy="1.2" rx="1.8" ry="1.2"/>
-    </g>
-    <g transform="translate(115 7)">
-      <circle cx="-2" cy="-2" r="0.9"/><circle cx="0" cy="-3" r="0.9"/><circle cx="2" cy="-2" r="0.9"/>
-      <ellipse cx="0" cy="1.2" rx="1.8" ry="1.2"/>
-    </g>
-    <g transform="translate(150 6)">
-      <circle cx="-2" cy="-2" r="0.9"/><circle cx="0" cy="-3" r="0.9"/><circle cx="2" cy="-2" r="0.9"/>
-      <ellipse cx="0" cy="1.2" rx="1.8" ry="1.2"/>
-    </g>
-    <g transform="translate(185 7)">
-      <circle cx="-2" cy="-2" r="0.9"/><circle cx="0" cy="-3" r="0.9"/><circle cx="2" cy="-2" r="0.9"/>
-      <ellipse cx="0" cy="1.2" rx="1.8" ry="1.2"/>
-    </g>
   </g>
 </svg>`;
 
@@ -393,39 +346,6 @@ const CONE = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
   <path fill="#fff" opacity="0.75" d="M14 26 L 34 26 L 35 30 L 13 30 Z"/>
 </svg>`;
 
-// Header decoration strip: a row of tiny vehicles.
-const VEHICLE_TRAIL = `<svg viewBox="0 0 200 12" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-  <g fill="currentColor">
-    <!-- car -->
-    <g transform="translate(10 6)">
-      <path d="M-8 2 L -6 -1 L -4 -2 L 4 -2 L 6 -1 L 8 2 L 8 3 L -8 3 Z"/>
-      <circle cx="-5" cy="3.5" r="1"/><circle cx="5" cy="3.5" r="1"/>
-    </g>
-    <!-- plane -->
-    <g transform="translate(50 6)">
-      <path d="M-10 0 L 6 0 L 10 -1 L 10 1 L 6 1 L 2 3 L 0 1 L -10 1 Z"/>
-      <path d="M4 -4 L 8 -4 L 10 0 L 4 0 Z"/>
-    </g>
-    <!-- bus -->
-    <g transform="translate(92 6)">
-      <path d="M-8 -3 L 8 -3 L 8 3 L -8 3 Z"/>
-      <circle cx="-5" cy="3.5" r="1"/><circle cx="5" cy="3.5" r="1"/>
-    </g>
-    <!-- sailboat -->
-    <g transform="translate(132 6)">
-      <path d="M-7 3 L 7 3 L 5 5 L -5 5 Z"/>
-      <path d="M-0.5 -5 L 0.5 -5 L 0.5 3 L -0.5 3 Z"/>
-      <path d="M0.5 -4 L 5 3 L 0.5 3 Z"/>
-    </g>
-    <!-- train -->
-    <g transform="translate(172 6)">
-      <path d="M-10 -2 L 10 -2 L 10 3 L -10 3 Z"/>
-      <path d="M-9 -4 L -6 -4 L -6 -2 L -9 -2 Z"/>
-      <circle cx="-6" cy="3.5" r="1"/><circle cx="0" cy="3.5" r="1"/><circle cx="6" cy="3.5" r="1"/>
-    </g>
-  </g>
-</svg>`;
-
 export const THEMES: Record<Theme, ThemeDef> = {
   none: {
     palette: {
@@ -434,7 +354,6 @@ export const THEMES: Record<Theme, ThemeDef> = {
       accent: "#b8b8b8",
     },
     motifs: [],
-    headerDecoration: "",
   },
   enchanted: {
     palette: {
@@ -453,7 +372,6 @@ export const THEMES: Record<Theme, ThemeDef> = {
       { name: "star5",      svg: STAR_5,      scale: 0.75, tint: "accent" },
       { name: "sparkle4",   svg: SPARKLE_4,   scale: 0.65, tint: "accent" },
     ],
-    headerDecoration: STAR_TRAIL,
   },
   dinosaurs: {
     palette: {
@@ -473,7 +391,6 @@ export const THEMES: Record<Theme, ThemeDef> = {
       { name: "footprint",    svg: FOOTPRINT,    scale: 0.7, tint: "accent" },
       { name: "bone",         svg: BONE,         scale: 0.75, tint: "accent" },
     ],
-    headerDecoration: FOOTPRINT_TRAIL,
   },
   vehicles: {
     palette: {
@@ -494,6 +411,5 @@ export const THEMES: Record<Theme, ThemeDef> = {
       { name: "traffic-light", svg: TRAFFIC_LIGHT, scale: 0.75, tint: "accent" },
       { name: "cone",          svg: CONE,          scale: 0.7, tint: "accent" },
     ],
-    headerDecoration: VEHICLE_TRAIL,
   },
 };

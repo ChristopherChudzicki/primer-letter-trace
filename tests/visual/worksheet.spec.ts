@@ -8,7 +8,6 @@ const SAMPLE_CONTENT = "A\na\nB\nb\nC\nc";
 function urlFor(partial: Partial<SheetConfig>): string {
   const params = new URLSearchParams();
   params.set("content", partial.content?.join("\n") ?? SAMPLE_CONTENT);
-  params.set("layout", partial.layout ?? "multi");
   params.set("demo", (partial.showDemo ?? true) ? "1" : "0");
   params.set("trace", String(partial.traceCount ?? 2));
   params.set("size", partial.size ?? "medium");
@@ -24,7 +23,6 @@ interface RowVariant {
   traceCount: SheetConfig["traceCount"];
 }
 
-const layouts: SheetConfig["layout"][] = ["multi", "single"];
 // Representative row variants covering: default (demo + 2 trace), demo-only,
 // trace-only. Extra traceCount levels (0, 3) are exercised by the unit test.
 const rowVariants: RowVariant[] = [
@@ -35,22 +33,20 @@ const rowVariants: RowVariant[] = [
 const themes: SheetConfig["theme"][] = ["none", "enchanted", "dinosaurs", "vehicles"];
 const sizes: SheetConfig["size"][] = ["small", "medium", "large"];
 
-for (const layout of layouts) {
-  for (const variant of rowVariants) {
-    for (const theme of themes) {
-      const name = `${layout}-${variant.slug}-${theme}`;
-      test(`renders ${name}`, async ({ page }) => {
-        await page.goto(urlFor({
-          layout, showDemo: variant.showDemo, traceCount: variant.traceCount, theme,
-        }));
-        await page.waitForFunction(() => document.querySelectorAll(".sheet").length > 0);
-        await page.waitForFunction(
-          () => document.querySelector(".sheet svg.row path, .sheet svg.header path") !== null,
-        );
-        const preview = page.locator("#preview");
-        await expect(preview).toHaveScreenshot(`${name}.png`);
-      });
-    }
+for (const variant of rowVariants) {
+  for (const theme of themes) {
+    const name = `${variant.slug}-${theme}`;
+    test(`renders ${name}`, async ({ page }) => {
+      await page.goto(urlFor({
+        showDemo: variant.showDemo, traceCount: variant.traceCount, theme,
+      }));
+      await page.waitForFunction(() => document.querySelectorAll(".sheet").length > 0);
+      await page.waitForFunction(
+        () => document.querySelector(".sheet svg.row path") !== null,
+      );
+      const preview = page.locator("#preview");
+      await expect(preview).toHaveScreenshot(`${name}.png`);
+    });
   }
 }
 
