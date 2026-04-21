@@ -6,12 +6,19 @@ import { glyphPath } from "../rendering/glyph";
 import { THEMES, ThemeDef } from "../theming/themes";
 import { placeMotifs } from "../theming/placement";
 
+// CSS pixels per inch. Browsers treat `1in` as exactly 96 CSS px regardless of
+// device pixel density, so anchoring all physical measurements on this
+// constant keeps print output deterministic (8.5 × 96 = one actual inch on paper).
+const PX_PER_IN = 96;
+
 const PAPER_DIMENSIONS: Record<PaperSize, { widthPx: number; heightPx: number }> = {
-  letter: { widthPx: 8.5 * 96, heightPx: 11 * 96 },
-  a4: { widthPx: (210 / 25.4) * 96, heightPx: (297 / 25.4) * 96 },
+  letter: { widthPx: 8.5 * PX_PER_IN, heightPx: 11 * PX_PER_IN },
+  a4: { widthPx: (210 / 25.4) * PX_PER_IN, heightPx: (297 / 25.4) * PX_PER_IN },
 };
-const MARGIN_PX = 0.5 * 96;
-const ROW_SPACING_PX = 0.25 * 96;
+const MARGIN_PX = 0.5 * PX_PER_IN;
+// 1/8in between rows — tight but still leaves room for ascenders and
+// descenders without the next row's headline intruding.
+const ROW_SPACING_PX = PX_PER_IN / 8;
 // Cap-height for the large word shown at the top of each single-item page.
 const HEADER_CAP_PX = 80;
 

@@ -29,8 +29,10 @@ export function computeLines(asset: FontAsset, capHeightPx: number): LineGeometr
   const descenderPx = asset.descender * scale;
   const ascenderPx = asset.ascender * scale;
 
-  // Extra room above the headline for letters whose ascender exceeds cap-height.
-  // For Andika, ascender ≈ 1.22 × cap-height, so this is ~22% of cap-height.
+  // Extra room above the headline for letters whose ascender exceeds
+  // cap-height (b, d, f, h, k, l, t). `ascenderPx` here is already the
+  // tightest measurement taken over A–Z/a–z/0–9 (see font.ts), so this is
+  // exactly the overflow needed for our glyphs — no diacritic padding.
   const ascenderOverflow = Math.max(0, ascenderPx - capHeightPx);
 
   const headline = ascenderOverflow;
