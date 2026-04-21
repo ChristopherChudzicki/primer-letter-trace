@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { parseContent, PRESETS, presetToText } from "../../src/config/content";
+import { parseContent } from "../../src/config/content";
+import { PRESETS, presetByKey } from "../../src/config/presets";
 
 describe("parseContent", () => {
   test("splits newline-separated items", () => {
@@ -30,25 +31,25 @@ describe("parseContent", () => {
   });
 });
 
-describe("presets", () => {
-  test("uppercase is A-Z", () => {
-    expect(PRESETS.uppercase.join("")).toBe("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+describe("starter presets", () => {
+  test("every preset key is unique", () => {
+    const keys = PRESETS.map((p) => p.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
-  test("lowercase is a-z", () => {
-    expect(PRESETS.lowercase.join("")).toBe("abcdefghijklmnopqrstuvwxyz");
+  test("presetByKey returns the matching preset", () => {
+    const first = PRESETS[0]!;
+    expect(presetByKey(first.key)).toBe(first);
   });
 
-  test("pairs alternate uppercase and lowercase one per item", () => {
-    expect(PRESETS.pairs.slice(0, 4)).toEqual(["A", "a", "B", "b"]);
-    expect(PRESETS.pairs).toHaveLength(52);
+  test("presetByKey returns undefined for unknown keys", () => {
+    expect(presetByKey("not-a-preset")).toBeUndefined();
   });
 
-  test("digits are 0-9", () => {
-    expect(PRESETS.digits).toEqual(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
-  });
-
-  test("presetToText joins with newlines", () => {
-    expect(presetToText("digits")).toBe("0\n1\n2\n3\n4\n5\n6\n7\n8\n9");
+  test("Aa–Zz one-per-row covers the whole alphabet", () => {
+    const preset = presetByKey("aa-zz-one-per-row")!;
+    expect(preset.config.content).toHaveLength(26);
+    expect(preset.config.content[0]).toBe("A a");
+    expect(preset.config.content[25]).toBe("Z z");
   });
 });
