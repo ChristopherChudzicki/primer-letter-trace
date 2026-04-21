@@ -222,6 +222,97 @@ function pruneSpurs(
   });
 }
 
+interface Component {
+  /** Centroid in pixel space. */
+  cx: number;
+  cy: number;
+  /** Pixel-space bounding box. */
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  /** Pixel count. */
+  size: number;
+}
+
+/** Label ink pixels with 4-connected components; return per-component stats. */
+function findComponents(imageData: {
+  data: Uint8ClampedArray;
+  width: number;
+  height: number;
+}): Component[] {
+  const { data, width, height } = imageData;
+  const labels = new Int32Array(width * height);
+  const out: Component[] = [];
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x;
+      if (data[idx * 4]! < 128) continue;
+      if (labels[idx] !== 0) continue;
+
+      labels[idx] = out.length + 1;
+      const stack: [number, number][] = [[x, y]];
+      let sumX = 0, sumY = 0, count = 0;
+      let minX = x, maxX = x, minY = y, maxY = y;
+
+      while (stack.length) {
+        const [px, py] = stack.pop()!;
+        sumX += px; sumY += py; count++;
+        if (px < minX) minX = px;
+        if (px > maxX) maxX = px;
+        if (py < minY) minY = py;
+        if (py > maxY) maxY = py;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const nx = px + dx, ny = py + dy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          const ni = ny * width + nx;
+          if (labels[ni] !== 0) continue;
+          if (data[ni * 4]! < 128) continue;
+          labels[ni] = out.length + 1;
+          stack.push([nx, ny]);
+        }
+      }
+      out.push({ cx: sumX / count, cy: sumY / count, minX, maxX, minY, maxY, size: count });
+    }
+  }
+  return out;
+}
+
+/** True if `pt` falls inside the component's bounding box. */
+function pointInComponent(pt: [number, number], c: Component): boolean {
+  const [x, y] = pt;
+  return x >= c.minX && x <= c.maxX && y >= c.minY && y <= c.maxY;
+}
+
+/**
+ * For each connected ink component not covered by any existing polyline,
+ * emit a short horizontal segment centered on its centroid — enough to show
+ * as a dashed mark under the ghost fill (the tittle on i / j, for example).
+ * Without this step, skeleton-tracing-js drops small round components
+ * because thinning collapses them to a single pixel.
+ */
+function addMissingComponentMarkers(
+  polylines: Polyline[],
+  components: Component[],
+): Polyline[] {
+  const extra: Polyline[] = [];
+  for (const c of components) {
+    const covered = polylines.some((p) => p.points.some((pt) => pointInComponent(pt, c)));
+    if (covered) continue;
+    // Short horizontal dash spanning ~60% of the component's width so it
+    // reads as a mark inside the ghost fill rather than an isolated dot.
+    const halfSpan = Math.max(2, (c.maxX - c.minX) * 0.3);
+    extra.push({
+      points: [
+        [c.cx - halfSpan, c.cy],
+        [c.cx + halfSpan, c.cy],
+      ],
+    });
+  }
+  return [...polylines, ...extra];
+}
+
 /** Map pixel-space polylines back to font units. */
 function mapToFontUnits(
   polyline: Polyline,
@@ -279,11 +370,16 @@ function main(): void {
       args.rasterSize,
     );
     const raw = traceSkeleton(imageData);
-    if (raw.length === 0) {
+    // Add markers for any connected ink component missed by the tracer
+    // (e.g., tittles on i / j — small round blobs that thin to a point).
+    const components = findComponents(imageData);
+    const withMarkers = addMissingComponentMarkers(raw, components);
+    if (withMarkers.length === 0) {
       console.warn(`  ${JSON.stringify(char)}: no skeleton found — skipping`);
       continue;
     }
-    const simplified = raw.map((p) => simplifyPolyline(p, args.simplifyTolerance));
+    const markerCount = withMarkers.length - raw.length;
+    const simplified = withMarkers.map((p) => simplifyPolyline(p, args.simplifyTolerance));
     const inFontUnits = simplified.map((p) => mapToFontUnits(p, toFontUnits));
     // Prune spur artifacts from thinning at sharp junctions. Thresholds in
     // font units; ~8% of em length is typical for junction spurs.
@@ -294,9 +390,12 @@ function main(): void {
     skeletons[char] = polylinesToSvgPath(pruned);
     const pointCount = pruned.reduce((n, p) => n + p.points.length, 0);
     const strokes = pruned.length;
-    const prunedNote = prunedCount > 0 ? ` (pruned ${prunedCount} spur${prunedCount === 1 ? "" : "s"})` : "";
+    const notes: string[] = [];
+    if (prunedCount > 0) notes.push(`pruned ${prunedCount} spur${prunedCount === 1 ? "" : "s"}`);
+    if (markerCount > 0) notes.push(`added ${markerCount} component marker${markerCount === 1 ? "" : "s"}`);
+    const noteStr = notes.length ? ` (${notes.join("; ")})` : "";
     console.log(
-      `  ${JSON.stringify(char)}: ${strokes} stroke${strokes === 1 ? "" : "s"}, ${pointCount} points${prunedNote}`,
+      `  ${JSON.stringify(char)}: ${strokes} stroke${strokes === 1 ? "" : "s"}, ${pointCount} points${noteStr}`,
     );
   }
 
