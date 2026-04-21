@@ -16,11 +16,13 @@ export interface PlacedMotif {
   svg: string;
 }
 
-// Base motif size in pixels, scaled by the Size preset.
+// Base motif size in pixels, scaled by the Size preset. Kept small enough
+// that a typical motif (scale 1.0) fits well inside the 48px margin strip;
+// oversized motifs (scale > 1.1) get further clamped below.
 const BASE_MOTIF_PX: Record<Size, number> = {
-  small: 34,
-  medium: 42,
-  large: 54,
+  small: 24,
+  medium: 30,
+  large: 36,
 };
 
 const MOTIFS_PER_PAGE: Record<Size, number> = {
@@ -111,13 +113,20 @@ export function placeMotifs(options: {
 
   const chosenZones = shuffledZones.slice(0, count);
 
+  // Hard cap on rendered motif size so the rotated bounding box fits entirely
+  // within the margin strip (centered at halfMargin, extending halfMargin on
+  // each side). At ±12° rotation the bounding factor is ~1.19; subtract a
+  // 2px safety pad so nothing kisses the page edge or a row of content.
+  const maxSize = Math.floor(2 * (marginPx / 2 - 2) / 1.19);
+
   const placements: PlacedMotif[] = [];
   for (const zone of chosenZones) {
     const motif = pickMotif(theme.motifs, rand);
     const scale = motif.scale ?? 1;
-    const size = Math.round(baseSize * scale);
+    const size = Math.min(Math.round(baseSize * scale), maxSize);
     const color = motif.tint === "accent" ? theme.palette.accent : theme.palette.primary;
     const rotation = Math.round((rand() - 0.5) * 24); // ±12°
+
     placements.push({
       x: Math.round(zone.cx - size / 2),
       y: Math.round(zone.cy - size / 2),
@@ -129,6 +138,7 @@ export function placeMotifs(options: {
   }
   return placements;
 }
+
 
 /** Pick a motif weighted by its `scale` (bigger scale ≈ more chance). */
 function pickMotif(motifs: Motif[], rand: () => number): Motif {
