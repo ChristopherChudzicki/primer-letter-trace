@@ -285,32 +285,34 @@ function pointInComponent(pt: [number, number], c: Component): boolean {
   return x >= c.minX && x <= c.maxX && y >= c.minY && y <= c.maxY;
 }
 
+interface PixelDot {
+  cx: number;
+  cy: number;
+  r: number;
+}
+
 /**
- * For each connected ink component not covered by any existing polyline,
- * emit a short horizontal segment centered on its centroid — enough to show
- * as a dashed mark under the ghost fill (the tittle on i / j, for example).
- * Without this step, skeleton-tracing-js drops small round components
- * because thinning collapses them to a single pixel.
+ * Find connected ink components that weren't touched by any polyline
+ * (thinning-dropped blobs like the tittles on i / j). Classify each as a
+ * "dot" — render as a solid filled circle with radius matching the
+ * component's half-width, which is how a tittle visually reads to learners.
  */
-function addMissingComponentMarkers(
+function missingDotComponents(
   polylines: Polyline[],
   components: Component[],
-): Polyline[] {
-  const extra: Polyline[] = [];
+): PixelDot[] {
+  const dots: PixelDot[] = [];
   for (const c of components) {
     const covered = polylines.some((p) => p.points.some((pt) => pointInComponent(pt, c)));
     if (covered) continue;
-    // Short horizontal dash spanning ~60% of the component's width so it
-    // reads as a mark inside the ghost fill rather than an isolated dot.
-    const halfSpan = Math.max(2, (c.maxX - c.minX) * 0.3);
-    extra.push({
-      points: [
-        [c.cx - halfSpan, c.cy],
-        [c.cx + halfSpan, c.cy],
-      ],
-    });
+    const halfW = (c.maxX - c.minX) / 2;
+    const halfH = (c.maxY - c.minY) / 2;
+    // Radius: average of half-width and half-height, with a minimum so very
+    // thin blobs still render as a visible dot.
+    const r = Math.max(2, (halfW + halfH) / 2);
+    dots.push({ cx: c.cx, cy: c.cy, r });
   }
-  return [...polylines, ...extra];
+  return dots;
 }
 
 /** Map pixel-space polylines back to font units. */
@@ -360,6 +362,7 @@ function main(): void {
   const os2 = extractOs2(font);
 
   const skeletons: Record<string, string> = {};
+  const dots: Record<string, { cx: number; cy: number; r: number }[]> = {};
   const chars = Array.from(args.chars);
   console.log(`Processing ${chars.length} glyphs @ ${args.rasterSize}px raster…`);
 
@@ -370,16 +373,13 @@ function main(): void {
       args.rasterSize,
     );
     const raw = traceSkeleton(imageData);
-    // Add markers for any connected ink component missed by the tracer
-    // (e.g., tittles on i / j — small round blobs that thin to a point).
     const components = findComponents(imageData);
-    const withMarkers = addMissingComponentMarkers(raw, components);
-    if (withMarkers.length === 0) {
+    const pixelDots = missingDotComponents(raw, components);
+    if (raw.length === 0 && pixelDots.length === 0) {
       console.warn(`  ${JSON.stringify(char)}: no skeleton found — skipping`);
       continue;
     }
-    const markerCount = withMarkers.length - raw.length;
-    const simplified = withMarkers.map((p) => simplifyPolyline(p, args.simplifyTolerance));
+    const simplified = raw.map((p) => simplifyPolyline(p, args.simplifyTolerance));
     const inFontUnits = simplified.map((p) => mapToFontUnits(p, toFontUnits));
     // Prune spur artifacts from thinning at sharp junctions. Thresholds in
     // font units; ~8% of em length is typical for junction spurs.
@@ -388,11 +388,22 @@ function main(): void {
     const pruned = pruneSpurs(inFontUnits, minLengthUnits, connectToleranceUnits);
     const prunedCount = inFontUnits.length - pruned.length;
     skeletons[char] = polylinesToSvgPath(pruned);
+
+    // Map pixel-space dots to font units. `toFontUnits` is affine, so we can
+    // reuse it for each point; radius scales by 1/scale.
+    const pxToFontScale = Math.abs(toFontUnits([1, 0])[0] - toFontUnits([0, 0])[0]);
+    if (pixelDots.length > 0) {
+      dots[char] = pixelDots.map((d) => {
+        const [cxFont, cyFont] = toFontUnits([d.cx, d.cy]);
+        return { cx: cxFont, cy: cyFont, r: d.r * pxToFontScale };
+      });
+    }
+
     const pointCount = pruned.reduce((n, p) => n + p.points.length, 0);
     const strokes = pruned.length;
     const notes: string[] = [];
     if (prunedCount > 0) notes.push(`pruned ${prunedCount} spur${prunedCount === 1 ? "" : "s"}`);
-    if (markerCount > 0) notes.push(`added ${markerCount} component marker${markerCount === 1 ? "" : "s"}`);
+    if (pixelDots.length > 0) notes.push(`${pixelDots.length} dot${pixelDots.length === 1 ? "" : "s"}`);
     const noteStr = notes.length ? ` (${notes.join("; ")})` : "";
     console.log(
       `  ${JSON.stringify(char)}: ${strokes} stroke${strokes === 1 ? "" : "s"}, ${pointCount} points${noteStr}`,
@@ -408,6 +419,7 @@ function main(): void {
     descender: font.descender,
     generatedAt: new Date().toISOString(),
     skeletons,
+    dots,
   });
   writeFileSync(args.output, output);
   console.log(`Wrote ${Object.keys(skeletons).length} skeletons to ${args.output}`);
@@ -422,9 +434,19 @@ function renderModule(data: {
   descender: number;
   generatedAt: string;
   skeletons: Record<string, string>;
+  dots: Record<string, { cx: number; cy: number; r: number }[]>;
 }): string {
-  const entries = Object.entries(data.skeletons)
+  const skeletonEntries = Object.entries(data.skeletons)
     .map(([char, path]) => `  ${JSON.stringify(char)}: ${JSON.stringify(path)},`)
+    .join("\n");
+  const fmt = (n: number): string => n.toFixed(1).replace(/\.0$/, "");
+  const dotEntries = Object.entries(data.dots)
+    .map(([char, arr]) => {
+      const serialized = arr
+        .map((d) => `{ cx: ${fmt(d.cx)}, cy: ${fmt(d.cy)}, r: ${fmt(d.r)} }`)
+        .join(", ");
+      return `  ${JSON.stringify(char)}: [${serialized}],`;
+    })
     .join("\n");
   return `// AUTO-GENERATED by scripts/generate-skeletons.ts — do not edit by hand.
 // Source: ${data.sourceFont}
@@ -442,7 +464,10 @@ const SET: SkeletonSet = {
     generatedAt: ${JSON.stringify(data.generatedAt)},
   },
   skeletons: {
-${entries}
+${skeletonEntries}
+  },
+  dots: {
+${dotEntries}
   },
 };
 

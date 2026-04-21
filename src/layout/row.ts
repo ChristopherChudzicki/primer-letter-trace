@@ -137,21 +137,39 @@ function appendSkeleton(
   baselineY: number,
 ): void {
   const skelData = SKELETONS.skeletons[char];
-  if (!skelData) return;
+  const dotData = SKELETONS.dots[char];
+  if (!skelData && !dotData) return;
 
   const scale = fontSizePx / SKELETONS.meta.unitsPerEm;
-  const p = document.createElementNS(SVG_NS, "path");
-  p.setAttribute("d", skelData);
-  p.setAttribute(
-    "transform",
-    `translate(${originX}, ${baselineY}) scale(${scale}, ${-scale})`,
-  );
-  p.setAttribute("fill", "none");
-  p.setAttribute("stroke", "#888");
-  p.setAttribute("stroke-width", "1.5");
-  p.setAttribute("stroke-linecap", "round");
-  p.setAttribute("stroke-linejoin", "round");
-  p.setAttribute("stroke-dasharray", "4 4");
-  p.setAttribute("vector-effect", "non-scaling-stroke");
-  svg.appendChild(p);
+  const transform = `translate(${originX}, ${baselineY}) scale(${scale}, ${-scale})`;
+
+  if (skelData) {
+    const p = document.createElementNS(SVG_NS, "path");
+    p.setAttribute("d", skelData);
+    p.setAttribute("transform", transform);
+    p.setAttribute("fill", "none");
+    p.setAttribute("stroke", "#888");
+    p.setAttribute("stroke-width", "1.5");
+    p.setAttribute("stroke-linecap", "round");
+    p.setAttribute("stroke-linejoin", "round");
+    p.setAttribute("stroke-dasharray", "4 4");
+    p.setAttribute("vector-effect", "non-scaling-stroke");
+    svg.appendChild(p);
+  }
+
+  if (dotData) {
+    // Solid filled circle — tittle on i/j. Rendered in font units and
+    // transformed with the skeleton so the radius scales with font-size.
+    // Shrunk below the raw detected radius so the dot sits comfortably
+    // inside the ghost fill rather than covering it.
+    for (const dot of dotData) {
+      const c = document.createElementNS(SVG_NS, "circle");
+      c.setAttribute("cx", `${dot.cx}`);
+      c.setAttribute("cy", `${dot.cy}`);
+      c.setAttribute("r", `${dot.r * 0.55}`);
+      c.setAttribute("transform", transform);
+      c.setAttribute("fill", "#888");
+      svg.appendChild(c);
+    }
+  }
 }

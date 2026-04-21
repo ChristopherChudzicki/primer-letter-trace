@@ -21,7 +21,21 @@ export interface SkeletonMeta {
  */
 export type SkeletonPath = string;
 
+/**
+ * A solid dot — rendered as a filled circle rather than a dashed stroke.
+ * Used for small round components like the tittle on i/j, which thinning
+ * collapses to a point and which visually read as "dots" to the learner.
+ */
+export interface SkeletonDot {
+  cx: number;
+  cy: number;
+  /** Radius in font units. */
+  r: number;
+}
+
 export interface SkeletonSet {
   meta: SkeletonMeta;
   skeletons: Record<string, SkeletonPath>;
+  /** Solid dots per glyph (e.g., i, j). Optional per char. */
+  dots: Record<string, SkeletonDot[]>;
 }
