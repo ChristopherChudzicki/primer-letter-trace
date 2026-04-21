@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
-    "generate:skeletons": "tsx scripts/generate-skeletons.ts --font public/andika.ttf --output src/rendering/skeletons/andika.ts"
+    "generate:skeletons": "tsx scripts/generate-skeletons.ts --font public/andika.ttf --output src/rendering/skeletons/andika.ts",
+    "generate:og": "tsx scripts/generate-og.ts"
   },
   "keywords": [],
   "author": "",
