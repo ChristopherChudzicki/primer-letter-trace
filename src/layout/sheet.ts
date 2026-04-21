@@ -25,16 +25,20 @@ export function buildSheets(asset: FontAsset, config: SheetConfig): HTMLElement[
   const printableWidth = paper.widthPx - 2 * MARGIN_PX;
   const printableHeight = paper.heightPx - 2 * MARGIN_PX;
 
-  if (config.content.length === 0) return [];
-
   const rowHeight = singleRowHeight(asset, config.size);
   const rowStride = rowHeight + ROW_SPACING_PX;
   const rowsPerPage = Math.max(1, Math.floor(printableHeight / rowStride));
 
+  // Empty content → still render one page full of blank ruled rows. Gives
+  // a stable preview at app load and a printable blank practice sheet.
+  const lines = config.content.length === 0
+    ? new Array(rowsPerPage).fill("")
+    : config.content;
+
   const pages: HTMLElement[] = [];
   let pageIndex = 0;
-  for (let i = 0; i < config.content.length; i += rowsPerPage) {
-    const chunk = config.content.slice(i, i + rowsPerPage);
+  for (let i = 0; i < lines.length; i += rowsPerPage) {
+    const chunk = lines.slice(i, i + rowsPerPage);
     const page = createPage(config.paperSize);
     const content = pageContentArea(page);
     for (const line of chunk) {
