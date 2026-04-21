@@ -2,8 +2,13 @@ import { loadFont } from "../rendering/font";
 import { bindForm } from "./form";
 import { renderPreview } from "./preview";
 import { configFromURL, configToURLParams } from "../config/url";
+import { presetByKey } from "../config/presets";
 import type { SheetConfig } from "../config/types";
 import { Store } from "../state/store";
+
+// Which starter preset to show on a bare visit (no query string). Once the
+// URL has any params, configFromURL takes over and this is ignored.
+const LANDING_PRESET_KEY = "aa-zz-one-per-row";
 
 export async function startApp(): Promise<void> {
   const controls = document.getElementById("controls");
@@ -16,7 +21,7 @@ export async function startApp(): Promise<void> {
   // /primer-letter-trace/).
   const asset = await loadFont(`${import.meta.env.BASE_URL}andika.ttf`);
 
-  const store = new Store<SheetConfig>(configFromURL(new URL(window.location.href)));
+  const store = new Store<SheetConfig>(initialConfig());
 
   // Dynamic @page size/orientation matches the user's paperSize selection,
   // so the print dialog opens with the right defaults.
@@ -40,4 +45,14 @@ export async function startApp(): Promise<void> {
   });
 
   bindForm(controls, store);
+}
+
+/** Bare visit → load the landing preset; otherwise parse the URL. */
+function initialConfig(): SheetConfig {
+  const url = new URL(window.location.href);
+  if (url.search === "") {
+    const preset = presetByKey(LANDING_PRESET_KEY);
+    if (preset) return preset.config;
+  }
+  return configFromURL(url);
 }
