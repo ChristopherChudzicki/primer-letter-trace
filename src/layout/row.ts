@@ -166,7 +166,7 @@ function appendSkeleton(
       const c = document.createElementNS(SVG_NS, "circle");
       c.setAttribute("cx", `${dot.cx}`);
       c.setAttribute("cy", `${dot.cy}`);
-      c.setAttribute("r", `${dot.r * 0.55}`);
+      c.setAttribute("r", `${dot.r * 0.4}`);
       c.setAttribute("transform", transform);
       c.setAttribute("fill", "#888");
       svg.appendChild(c);
