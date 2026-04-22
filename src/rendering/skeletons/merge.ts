@@ -26,5 +26,6 @@ export function mergeSkeletons(
     }
   }
 
+  // meta is treated as immutable; share by reference (no deep clone needed).
   return { meta: baseline.meta, skeletons, dots };
 }

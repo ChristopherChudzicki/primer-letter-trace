@@ -57,4 +57,25 @@ describe("mergeSkeletons", () => {
     const merged = mergeSkeletons(baseline, overrides);
     expect(merged.dots.i).toEqual([{ cx: 10, cy: 300, r: 8 }]);
   });
+
+  it("adds an override-only glyph that has no baseline entry", () => {
+    const overrides: SkeletonOverrides = {
+      Z: { strokes: [{ start: [0, 0], segments: [{ type: "line", to: [50, 50] }] }] },
+    };
+    const merged = mergeSkeletons(baseline, overrides);
+    expect(merged.skeletons.Z).toBe("M 0 0 L 50 50");
+    // baseline glyphs still present
+    expect(merged.skeletons.A).toBe("M 0 0 L 100 100");
+  });
+
+  it("clears baseline dots when override specifies dots: []", () => {
+    const overrides: SkeletonOverrides = {
+      i: {
+        strokes: [{ start: [10, 10], segments: [{ type: "line", to: [10, 200] }] }],
+        dots: [],
+      },
+    };
+    const merged = mergeSkeletons(baseline, overrides);
+    expect(merged.dots.i).toEqual([]);
+  });
 });
