@@ -25,6 +25,19 @@ describe("dslToD", () => {
     expect(dslToD(g)).toBe("M 0 0 L 10 0 L 10 10");
   });
 
+  it("emits mixed L and Q segments in one stroke", () => {
+    const g: GlyphSkeleton = {
+      strokes: [{
+        start: [0, 0],
+        segments: [
+          { type: "line", to: [50, 0] },
+          { type: "qcurve", control: [100, 0], to: [100, 50] },
+        ],
+      }],
+    };
+    expect(dslToD(g)).toBe("M 0 0 L 50 0 Q 100 0 100 50");
+  });
+
   it("emits Q for quadratic Bezier segments", () => {
     const g: GlyphSkeleton = {
       strokes: [
@@ -59,5 +72,9 @@ describe("dslToD", () => {
       strokes: [{ start: [0, 0], segments: [] }],
     };
     expect(() => dslToD(g)).toThrow(/empty stroke/);
+  });
+
+  it("returns an empty string for an empty strokes array", () => {
+    expect(dslToD({ strokes: [] })).toBe("");
   });
 });
