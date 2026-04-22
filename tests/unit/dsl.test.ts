@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { dslToD } from "../../src/rendering/skeletons/dsl";
+import { dslToD, dToDsl } from "../../src/rendering/skeletons/dsl";
 import type { GlyphSkeleton } from "../../src/rendering/skeletons/types";
+import ANDIKA_BASELINE from "../../src/rendering/skeletons/andika";
 
 describe("dslToD", () => {
   it("emits M+L for a single line stroke", () => {
@@ -76,5 +77,63 @@ describe("dslToD", () => {
 
   it("returns an empty string for an empty strokes array", () => {
     expect(dslToD({ strokes: [] })).toBe("");
+  });
+});
+
+describe("dToDsl", () => {
+  it("parses a simple M+L sequence", () => {
+    expect(dToDsl("M 10 20 L 30 40")).toEqual({
+      strokes: [
+        { start: [10, 20], segments: [{ type: "line", to: [30, 40] }] },
+      ],
+    });
+  });
+
+  it("parses M+L+L into one stroke with two line segments", () => {
+    expect(dToDsl("M 0 0 L 10 0 L 10 10")).toEqual({
+      strokes: [
+        {
+          start: [0, 0],
+          segments: [
+            { type: "line", to: [10, 0] },
+            { type: "line", to: [10, 10] },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("parses Q into a qcurve segment", () => {
+    expect(dToDsl("M 0 0 Q 50 100 100 0")).toEqual({
+      strokes: [
+        {
+          start: [0, 0],
+          segments: [{ type: "qcurve", control: [50, 100], to: [100, 0] }],
+        },
+      ],
+    });
+  });
+
+  it("splits multiple strokes on M", () => {
+    expect(dToDsl("M 0 0 L 10 10 M 20 20 L 30 30")).toEqual({
+      strokes: [
+        { start: [0, 0], segments: [{ type: "line", to: [10, 10] }] },
+        { start: [20, 20], segments: [{ type: "line", to: [30, 30] }] },
+      ],
+    });
+  });
+
+  it("throws on input that doesn't start with M", () => {
+    expect(() => dToDsl("L 10 10")).toThrow(/must start with M/);
+  });
+});
+
+describe("dslToD ↔ dToDsl round-trip on baseline data", () => {
+  it("round-trips every baseline glyph byte-identically", () => {
+    for (const [char, d] of Object.entries(ANDIKA_BASELINE.skeletons)) {
+      const dsl = dToDsl(d);
+      const round = dslToD(dsl);
+      expect(round, `round-trip mismatch for "${char}"`).toBe(d);
+    }
   });
 });
