@@ -126,6 +126,18 @@ describe("dToDsl", () => {
   it("throws on input that doesn't start with M", () => {
     expect(() => dToDsl("L 10 10")).toThrow(/must start with M/);
   });
+
+  it("throws when a coordinate token is missing", () => {
+    expect(() => dToDsl("M 10 20 L 30")).toThrow(/missing coordinate/);
+  });
+
+  it("throws when a coordinate token is non-numeric", () => {
+    expect(() => dToDsl("M 10 20 L abc 40")).toThrow(/non-numeric coordinate "abc"/);
+  });
+
+  it("throws on an unsupported command", () => {
+    expect(() => dToDsl("M 10 20 C 30 40 50 60 70 80")).toThrow(/unsupported command "C"/);
+  });
 });
 
 describe("dslToD ↔ dToDsl round-trip on baseline data", () => {

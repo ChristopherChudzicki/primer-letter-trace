@@ -28,6 +28,19 @@ function num(n: number): string {
   return `${n}`;
 }
 
+/** Parse a coordinate token, throwing if missing or non-numeric. */
+function parseCoord(tokens: string[], idx: number, cmd: string): number {
+  const tok = tokens[idx];
+  if (tok === undefined) {
+    throw new Error(`d string ended mid-${cmd} command (missing coordinate at token ${idx})`);
+  }
+  const n = Number(tok);
+  if (!Number.isFinite(n)) {
+    throw new Error(`d string has non-numeric coordinate "${tok}" in ${cmd} command at token ${idx}`);
+  }
+  return n;
+}
+
 /** Parse an SVG `d` string in the subset emitted by `dslToD` back into the DSL. */
 export function dToDsl(d: string): GlyphSkeleton {
   const tokens = d.trim().split(/\s+/);
@@ -36,27 +49,29 @@ export function dToDsl(d: string): GlyphSkeleton {
   }
 
   const strokes: Stroke[] = [];
+  // Non-null after the first iteration: the start-with-M check above guarantees
+  // the first token is M, which assigns `current` before any L/Q is processed.
   let current: Stroke | null = null;
   let i = 0;
 
   while (i < tokens.length) {
     const cmd = tokens[i]!;
     if (cmd === "M") {
-      const x = Number(tokens[i + 1]);
-      const y = Number(tokens[i + 2]);
+      const x = parseCoord(tokens, i + 1, cmd);
+      const y = parseCoord(tokens, i + 2, cmd);
       if (current) strokes.push(current);
       current = { start: [x, y], segments: [] };
       i += 3;
     } else if (cmd === "L") {
-      const x = Number(tokens[i + 1]);
-      const y = Number(tokens[i + 2]);
+      const x = parseCoord(tokens, i + 1, cmd);
+      const y = parseCoord(tokens, i + 2, cmd);
       current!.segments.push({ type: "line", to: [x, y] });
       i += 3;
     } else if (cmd === "Q") {
-      const cx = Number(tokens[i + 1]);
-      const cy = Number(tokens[i + 2]);
-      const x = Number(tokens[i + 3]);
-      const y = Number(tokens[i + 4]);
+      const cx = parseCoord(tokens, i + 1, cmd);
+      const cy = parseCoord(tokens, i + 2, cmd);
+      const x = parseCoord(tokens, i + 3, cmd);
+      const y = parseCoord(tokens, i + 4, cmd);
       current!.segments.push({ type: "qcurve", control: [cx, cy], to: [x, y] });
       i += 5;
     } else {
