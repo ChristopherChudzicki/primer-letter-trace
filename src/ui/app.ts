@@ -32,10 +32,15 @@ export async function startApp(): Promise<void> {
   if (!controls || !preview) throw new Error("DOM roots missing");
 
   preview.textContent = "Loading font…";
+  // BASE_URL is "/" in dev and whatever `base` is set to in production
+  // (currently "./" — works when the app is served from any subpath like
+  // /primer-letter-trace/).
   const asset = await loadFont(`${import.meta.env.BASE_URL}andika.ttf`);
 
   const store = new Store<SheetConfig>(initialConfig());
 
+  // Dynamic @page size/orientation matches the user's paperSize selection,
+  // so the print dialog opens with the right defaults.
   const pageStyle = document.createElement("style");
   document.head.appendChild(pageStyle);
 

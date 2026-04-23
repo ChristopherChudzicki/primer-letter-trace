@@ -10,5 +10,8 @@ export interface InspectorOptions {
 }
 
 export function renderInspector(opts: InspectorOptions): void {
-  opts.root.innerHTML = `<p>inspector stub: target=${opts.target}</p>`;
+  opts.root.replaceChildren();
+  const p = document.createElement("p");
+  p.textContent = `inspector stub: target=${opts.target}`;
+  opts.root.appendChild(p);
 }
