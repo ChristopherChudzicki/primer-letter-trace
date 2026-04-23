@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { dslToD, dToDsl } from "../../src/rendering/skeletons/dsl";
 import type { GlyphSkeleton } from "../../src/rendering/skeletons/types";
-import ANDIKA_BASELINE from "../../src/rendering/skeletons/andika";
+import ANDIKA_BASELINE from "../../src/rendering/skeletons/andika-baseline";
 
 describe("dslToD", () => {
   it("emits M+L for a single line stroke", () => {
