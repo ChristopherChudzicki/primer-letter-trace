@@ -6,18 +6,18 @@ import { CHARS } from "./chars";
 import { renderGlyph } from "./render";
 import { renderNav } from "./nav";
 
-const COLS = 8; // 8×8 = 64 cells; 62 used, 2 spare.
-
-export function renderGridView(root: HTMLElement, asset: FontAsset): void {
+export function renderGridView(root: HTMLElement, asset: FontAsset, chars: readonly string[] = CHARS): void {
   root.replaceChildren();
   root.appendChild(renderNav(null));
 
+  const cols = Math.min(8, chars.length);
+
   const grid = document.createElement("div");
   grid.classList.add("inspector-grid-view");
-  grid.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
   root.appendChild(grid);
 
-  for (const char of CHARS) {
+  for (const char of chars) {
     const cell = document.createElement("a");
     cell.href = `?inspect=${encodeURIComponent(char)}`;
     cell.classList.add("inspector-cell");
