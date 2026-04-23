@@ -26,7 +26,7 @@ export function renderSingle(root: HTMLElement, asset: FontAsset, char: string):
 
   // Build the source toggle once. Its event handler mutates `source` and
   // triggers a redraw of the stage + the sidebar's data block.
-  let source: Source = ANDIKA_OVERRIDES[char] ? "override" : "baseline";
+  let source: Source = ANDIKA_OVERRIDES[char] ? "both" : "baseline";
 
   const toggle = buildToggle(char, source, (next) => {
     source = next;
