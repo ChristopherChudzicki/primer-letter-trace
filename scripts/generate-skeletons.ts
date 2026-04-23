@@ -9,7 +9,7 @@
  * Usage:
  *   npm run generate:skeletons -- \
  *     --font public/andika.ttf \
- *     --output src/rendering/skeletons/andika.ts \
+ *     --output src/rendering/skeletons/andika-baseline.ts \
  *     [--chars "ABC…"] \
  *     [--raster-size 512] \
  *     [--simplify-tolerance 1.5]
