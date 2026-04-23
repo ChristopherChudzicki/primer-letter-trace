@@ -26,8 +26,18 @@ const DEFAULT_STROKE_COLORS = [
 /**
  * Build an <svg> with: filled glyph outline (gray), font-unit grid (light),
  * and the skeleton overlaid with each disjoint sub-path in a distinct color.
- * Coordinates are font units throughout; we apply a viewBox + scaleY(-1)
- * transform so Y-up data renders with the baseline at the bottom.
+ *
+ * Coordinate handling:
+ * - The skeleton, dots, grid, and baseline are stored in Y-up font units. We
+ *   render them inside a `<g transform="scale(1, -1)">` group so Y-up data
+ *   displays naturally (baseline at the bottom of the viewport).
+ * - The filled glyph from `opentype.js`'s `getPath` is already pre-flipped to
+ *   SVG Y-down (apex has negative y, descender has positive y). It's appended
+ *   *outside* the flip group (directly on the svg) so it renders in its
+ *   native orientation.
+ * - The viewBox uses `-maxY` for the y-origin so the visible vertical range
+ *   covers `[-maxY, -minY]` — the range that both the flipped Y-up content
+ *   and the native Y-down getPath output occupy after their respective transforms.
  */
 export function renderGlyph(opts: GlyphRenderOptions): SVGSVGElement {
   const { char, asset, skeleton, dots, sizePx } = opts;
@@ -35,9 +45,12 @@ export function renderGlyph(opts: GlyphRenderOptions): SVGSVGElement {
   const strokeColors = opts.strokeColors ?? DEFAULT_STROKE_COLORS;
 
   // Bounding box: glyph extents extended slightly so strokes don't clip.
+  // Use FontAsset's tight measurements (max bbox over A-Z/a-z/0-9) rather
+  // than the font's linguistic ascender/descender, which reserve diacritic
+  // room we never use (~1.7× capHeight for Andika — see font.ts).
   const margin = 80; // font units
-  const ascender = asset.font.ascender;
-  const descender = asset.font.descender; // negative
+  const ascender = asset.ascender;          // positive, tight
+  const descender = -asset.descender;       // FontAsset.descender is abs-value; negate to recover Y-up
   const advance = asset.font.charToGlyph(char).advanceWidth ?? asset.font.unitsPerEm * 0.5;
   const minX = -margin;
   const maxX = advance + margin;
@@ -47,18 +60,21 @@ export function renderGlyph(opts: GlyphRenderOptions): SVGSVGElement {
   const h = maxY - minY;
 
   const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", `${minX} ${-maxY} ${w} ${h}`); // -maxY because we flip
+  svg.setAttribute("viewBox", `${minX} ${-maxY} ${w} ${h}`);
   svg.setAttribute("width", `${sizePx}`);
   svg.setAttribute("height", `${(sizePx * h) / w}`);
   svg.classList.add("inspector-glyph");
 
+  // Filled glyph (already Y-down from opentype.js) goes directly on the svg.
+  appendFilledGlyph(svg, asset, char);
+
+  // Y-up content (grid, baseline, skeleton, dots) goes in the flip group.
   const flip = document.createElementNS(SVG_NS, "g");
   flip.setAttribute("transform", "scale(1, -1)");
   svg.appendChild(flip);
 
   if (showGrid) appendGrid(flip, minX, maxX, minY, maxY);
   appendBaselineMarker(flip, minX, maxX);
-  appendFilledGlyph(flip, asset, char);
   appendSkeleton(flip, skeleton, strokeColors);
   appendDots(flip, dots);
 
@@ -92,9 +108,10 @@ function appendBaselineMarker(parent: SVGGElement, minX: number, maxX: number) {
   parent.appendChild(line);
 }
 
-function appendFilledGlyph(parent: SVGGElement, asset: FontAsset, char: string) {
-  // Use opentype.js to get the glyph's outline at unitsPerEm size, so the
-  // path coordinates are already in font units.
+function appendFilledGlyph(parent: SVGElement, asset: FontAsset, char: string) {
+  // opentype.js's getPath() returns commands with Y already negated for SVG
+  // (apex of glyph has negative y, descender has positive y). We use it as-is
+  // and append outside the flip group — see renderGlyph's coord-handling note.
   const path = asset.font.getPath(char, 0, 0, asset.font.unitsPerEm);
   const d = path.toPathData(2);
   const el = document.createElementNS(SVG_NS, "path");
@@ -105,13 +122,17 @@ function appendFilledGlyph(parent: SVGGElement, asset: FontAsset, char: string) 
 
 function appendSkeleton(parent: SVGGElement, skeleton: SkeletonPath, colors: string[]) {
   // Split the d string on M commands to color each disjoint sub-path differently.
+  // dslToD only emits uppercase M, so this is unambiguous for our data.
   const subPaths = skeleton.match(/M[^M]*/g) ?? [];
   const g = document.createElementNS(SVG_NS, "g");
   g.classList.add("inspector-skeleton");
   subPaths.forEach((d, i) => {
     const el = document.createElementNS(SVG_NS, "path");
     el.setAttribute("d", d.trim());
-    el.setAttribute("stroke", colors[i % colors.length]!);
+    // Inline fill="none" as a safety baseline so the renderer is correct
+    // without inspector.css (default fill would solid-fill closed Q-curve subpaths).
+    el.setAttribute("fill", "none");
+    el.setAttribute("stroke", colors[i % colors.length] ?? colors[0] ?? "#000");
     el.setAttribute("vector-effect", "non-scaling-stroke");
     g.appendChild(el);
   });
