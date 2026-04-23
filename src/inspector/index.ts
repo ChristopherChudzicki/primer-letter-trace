@@ -1,17 +1,28 @@
 import type { FontAsset } from "../rendering/font";
+import { renderSingle } from "./single";
 
 export interface InspectorOptions {
-  /** The value of the `inspect` query param. "*" → grid mode; single char → single-glyph mode. */
   target: string;
-  /** Where to render the inspector UI (replaces page contents). */
   root: HTMLElement;
-  /** Loaded font for outline drawing. */
   asset: FontAsset;
 }
 
 export function renderInspector(opts: InspectorOptions): void {
-  opts.root.replaceChildren();
-  const p = document.createElement("p");
-  p.textContent = `inspector stub: target=${opts.target}`;
-  opts.root.appendChild(p);
+  if (opts.target === "*") {
+    opts.root.replaceChildren();
+    const p = document.createElement("p");
+    p.textContent = "grid mode coming in next task";
+    opts.root.appendChild(p);
+    return;
+  }
+  // Single-glyph mode. Treat the target as a single character.
+  const char = opts.target;
+  if (char.length !== 1) {
+    opts.root.replaceChildren();
+    const p = document.createElement("p");
+    p.textContent = `invalid inspect target: ${char}`;
+    opts.root.appendChild(p);
+    return;
+  }
+  renderSingle(opts.root, opts.asset, char);
 }
