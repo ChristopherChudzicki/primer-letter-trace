@@ -1,5 +1,6 @@
 import type { FontAsset } from "../rendering/font";
 import { CHARS } from "./chars";
+import { renderGridView } from "./grid";
 import { renderSingle } from "./single";
 
 export interface InspectorOptions {
@@ -10,10 +11,7 @@ export interface InspectorOptions {
 
 export function renderInspector(opts: InspectorOptions): void {
   if (opts.target === "*") {
-    opts.root.replaceChildren();
-    const p = document.createElement("p");
-    p.textContent = "grid mode coming in next task";
-    opts.root.appendChild(p);
+    renderGridView(opts.root, opts.asset);
     return;
   }
   // Single-glyph mode. Target must be one of the in-scope chars.
