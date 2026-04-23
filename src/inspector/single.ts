@@ -24,41 +24,64 @@ export function renderSingle(root: HTMLElement, asset: FontAsset, char: string):
   sidebar.classList.add("inspector-sidebar");
   wrap.appendChild(sidebar);
 
+  // Build the source toggle once. Its event handler mutates `source` and
+  // triggers a redraw of the stage + the sidebar's data block.
   let source: Source = ANDIKA_OVERRIDES[char] ? "override" : "baseline";
 
-  const draw = () => {
-    stage.innerHTML = "";
-    const { skeleton, dots } = resolveSkeleton(char, source);
+  const toggle = buildToggle(char, source, (next) => {
+    source = next;
+    drawStage();
+    drawSidebarData();
+  });
+  sidebar.appendChild(toggle);
+
+  // Sidebar data (metadata + DSL/d-string) lives in its own container so the
+  // redraw can swap it without destroying the toggle that sits above it.
+  const sidebarData = document.createElement("div");
+  sidebar.appendChild(sidebarData);
+
+  const drawStage = () => {
+    stage.replaceChildren();
     if (source === "both") {
       // Render baseline + override overlaid; baseline at lower opacity.
       const both = document.createElement("div");
       both.classList.add("inspector-both");
       const baseEl = renderGlyph({
         char, asset, skeleton: ANDIKA_BASELINE.skeletons[char] ?? "",
-        dots: ANDIKA_BASELINE.dots[char] ?? [], sizePx: 600,
+        dots: ANDIKA_BASELINE.dots[char] ?? [], sizePx: SIZE_PX,
       });
       baseEl.classList.add("inspector-glyph-baseline");
       both.appendChild(baseEl);
       if (ANDIKA_OVERRIDES[char]) {
         const overrideEl = renderGlyph({
           char, asset, skeleton: dslToD(ANDIKA_OVERRIDES[char]!),
-          dots: ANDIKA_OVERRIDES[char]!.dots ?? ANDIKA_BASELINE.dots[char] ?? [], sizePx: 600,
+          dots: ANDIKA_OVERRIDES[char]!.dots ?? ANDIKA_BASELINE.dots[char] ?? [], sizePx: SIZE_PX,
         });
         overrideEl.classList.add("inspector-glyph-override");
+        // The two SVGs share viewBox + sizePx so absolute-positioning the
+        // override layer with inset: 0 makes its coords align with the baseline.
         overrideEl.style.position = "absolute";
         overrideEl.style.inset = "0";
         both.appendChild(overrideEl);
       }
       stage.appendChild(both);
-    } else {
-      stage.appendChild(renderGlyph({ char, asset, skeleton, dots, sizePx: 600 }));
+      return;
     }
-
-    sidebar.innerHTML = "";
-    sidebar.appendChild(renderSidebar(char, source, asset));
+    const { skeleton, dots } = resolveSkeleton(char, source);
+    stage.appendChild(renderGlyph({ char, asset, skeleton, dots, sizePx: SIZE_PX }));
   };
 
-  // Source toggle.
+  const drawSidebarData = () => {
+    sidebarData.replaceChildren(renderSidebar(char, source, asset));
+  };
+
+  drawStage();
+  drawSidebarData();
+}
+
+const SIZE_PX = 600;
+
+function buildToggle(char: string, initial: Source, onChange: (next: Source) => void): HTMLElement {
   const toggle = document.createElement("div");
   toggle.classList.add("inspector-toggle");
   for (const opt of ["baseline", "override", "both"] as const) {
@@ -67,21 +90,16 @@ export function renderSingle(root: HTMLElement, asset: FontAsset, char: string):
     radio.type = "radio";
     radio.name = "source";
     radio.value = opt;
-    radio.checked = opt === source;
+    radio.checked = opt === initial;
     radio.disabled = opt === "override" && !ANDIKA_OVERRIDES[char];
     radio.addEventListener("change", () => {
-      if (radio.checked) {
-        source = opt;
-        draw();
-      }
+      if (radio.checked) onChange(opt);
     });
     label.appendChild(radio);
     label.append(` ${opt}`);
     toggle.appendChild(label);
   }
-  sidebar.appendChild(toggle);
-
-  draw();
+  return toggle;
 }
 
 function resolveSkeleton(char: string, source: Source): { skeleton: SkeletonPath; dots: SkeletonDot[] } {
