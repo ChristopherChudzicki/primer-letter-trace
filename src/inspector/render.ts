@@ -16,6 +16,11 @@ export interface GlyphRenderOptions {
   showGrid?: boolean;
   /** Stroke colors cycled per disjoint sub-path of the skeleton. */
   strokeColors?: string[];
+  /**
+   * Scale factor for dot radius. Useful at small sizePx where the natural
+   * font-unit dot would visually dominate the cell. Default 1.
+   */
+  dotScale?: number;
 }
 
 const DEFAULT_STROKE_COLORS = [
@@ -76,7 +81,7 @@ export function renderGlyph(opts: GlyphRenderOptions): SVGSVGElement {
   if (showGrid) appendGrid(flip, minX, maxX, minY, maxY);
   appendBaselineMarker(flip, minX, maxX);
   appendSkeleton(flip, skeleton, strokeColors);
-  appendDots(flip, dots);
+  appendDots(flip, dots, opts.dotScale ?? 1);
 
   return svg;
 }
@@ -139,7 +144,7 @@ function appendSkeleton(parent: SVGGElement, skeleton: SkeletonPath, colors: str
   parent.appendChild(g);
 }
 
-function appendDots(parent: SVGGElement, dots: SkeletonDot[]) {
+function appendDots(parent: SVGGElement, dots: SkeletonDot[], radiusScale: number) {
   if (dots.length === 0) return;
   const g = document.createElementNS(SVG_NS, "g");
   g.classList.add("inspector-dots");
@@ -147,7 +152,7 @@ function appendDots(parent: SVGGElement, dots: SkeletonDot[]) {
     const el = document.createElementNS(SVG_NS, "circle");
     el.setAttribute("cx", `${dot.cx}`);
     el.setAttribute("cy", `${dot.cy}`);
-    el.setAttribute("r", `${dot.r}`);
+    el.setAttribute("r", `${dot.r * radiusScale}`);
     g.appendChild(el);
   }
   parent.appendChild(g);

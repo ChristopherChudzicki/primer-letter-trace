@@ -29,7 +29,9 @@ export function renderGridView(root: HTMLElement, asset: FontAsset): void {
       : (ANDIKA_BASELINE.skeletons[char] ?? "");
     const dots = ANDIKA_OVERRIDES[char]?.dots ?? ANDIKA_BASELINE.dots[char] ?? [];
 
-    cell.appendChild(renderGlyph({ char, asset, skeleton, dots, sizePx: 140, showGrid: false }));
+    // Scale dot radius down at small sizes so i/j tittles don't dominate
+    // their cells (natural font-unit dot radius is sized for full-glyph render).
+    cell.appendChild(renderGlyph({ char, asset, skeleton, dots, sizePx: 140, showGrid: false, dotScale: 0.4 }));
 
     const label = document.createElement("div");
     label.classList.add("inspector-cell-label");
