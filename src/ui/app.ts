@@ -15,15 +15,28 @@ export async function startApp(): Promise<void> {
   const inspectTarget = url.searchParams.get("inspect");
 
   if (inspectTarget !== null) {
+    const fontParam = url.searchParams.get("font");
+    const { FONT_REGISTRY, DEFAULT_FONT, isFontKey } = await import(
+      "../inspector/fonts"
+    );
+    const fontKey =
+      fontParam !== null && isFontKey(fontParam) ? fontParam : DEFAULT_FONT;
     document.body.innerHTML = "";
     document.body.dataset.mode = "inspector";
     const status = document.createElement("p");
     status.textContent = "Loading font…";
     document.body.appendChild(status);
-    const asset = await loadFont(`${import.meta.env.BASE_URL}andika.ttf`);
+    const asset = await loadFont(
+      `${import.meta.env.BASE_URL}${FONT_REGISTRY[fontKey].ttf}`,
+    );
     status.remove();
     const { renderInspector } = await import("../inspector");
-    renderInspector({ target: inspectTarget, root: document.body, asset });
+    renderInspector({
+      target: inspectTarget,
+      root: document.body,
+      asset,
+      font: fontKey,
+    });
     return;
   }
 

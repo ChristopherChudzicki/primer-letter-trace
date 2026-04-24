@@ -1,16 +1,22 @@
 import type { FontAsset } from "../rendering/font";
-import ANDIKA_BASELINE from "../rendering/skeletons/andika-baseline";
-import ANDIKA_OVERRIDES from "../rendering/skeletons/andika-overrides";
 import { dslToD } from "../rendering/skeletons/dsl";
 import type { SkeletonDot, SkeletonPath } from "../rendering/skeletons/types";
+import { FONT_REGISTRY, type FontKey } from "./fonts";
 import { renderGlyph } from "./render";
 import { renderNav } from "./nav";
 
 type Source = "baseline" | "override" | "both";
 
-export function renderSingle(root: HTMLElement, asset: FontAsset, char: string): void {
+export function renderSingle(
+  root: HTMLElement,
+  asset: FontAsset,
+  char: string,
+  font: FontKey,
+): void {
+  const { baseline, overrides, label: fontLabel } = FONT_REGISTRY[font];
+
   root.innerHTML = "";
-  root.appendChild(renderNav(char));
+  root.appendChild(renderNav(char, font));
 
   const wrap = document.createElement("div");
   wrap.classList.add("inspector-single");
@@ -26,9 +32,9 @@ export function renderSingle(root: HTMLElement, asset: FontAsset, char: string):
 
   // Build the source toggle once. Its event handler mutates `source` and
   // triggers a redraw of the stage + the sidebar's data block.
-  let source: Source = ANDIKA_OVERRIDES[char] ? "both" : "baseline";
+  let source: Source = overrides[char] ? "both" : "baseline";
 
-  const toggle = buildToggle(char, source, (next) => {
+  const toggle = buildToggle(char, source, overrides, (next) => {
     source = next;
     drawStage();
     drawSidebarData();
@@ -47,15 +53,15 @@ export function renderSingle(root: HTMLElement, asset: FontAsset, char: string):
       const both = document.createElement("div");
       both.classList.add("inspector-both");
       const baseEl = renderGlyph({
-        char, asset, skeleton: ANDIKA_BASELINE.skeletons[char] ?? "",
-        dots: ANDIKA_BASELINE.dots[char] ?? [], sizePx: SIZE_PX,
+        char, asset, skeleton: baseline.skeletons[char] ?? "",
+        dots: baseline.dots[char] ?? [], sizePx: SIZE_PX,
       });
       baseEl.classList.add("inspector-glyph-baseline");
       both.appendChild(baseEl);
-      if (ANDIKA_OVERRIDES[char]) {
+      if (overrides[char]) {
         const overrideEl = renderGlyph({
-          char, asset, skeleton: dslToD(ANDIKA_OVERRIDES[char]!),
-          dots: ANDIKA_OVERRIDES[char]!.dots ?? ANDIKA_BASELINE.dots[char] ?? [], sizePx: SIZE_PX,
+          char, asset, skeleton: dslToD(overrides[char]!),
+          dots: overrides[char]!.dots ?? baseline.dots[char] ?? [], sizePx: SIZE_PX,
         });
         overrideEl.classList.add("inspector-glyph-override");
         // The two SVGs share viewBox + sizePx so absolute-positioning the
@@ -67,12 +73,14 @@ export function renderSingle(root: HTMLElement, asset: FontAsset, char: string):
       stage.appendChild(both);
       return;
     }
-    const { skeleton, dots } = resolveSkeleton(char, source);
+    const { skeleton, dots } = resolveSkeleton(char, source, baseline, overrides);
     stage.appendChild(renderGlyph({ char, asset, skeleton, dots, sizePx: SIZE_PX }));
   };
 
   const drawSidebarData = () => {
-    sidebarData.replaceChildren(renderSidebar(char, source, asset));
+    sidebarData.replaceChildren(
+      renderSidebar(char, source, asset, fontLabel, baseline, overrides),
+    );
   };
 
   drawStage();
@@ -81,7 +89,12 @@ export function renderSingle(root: HTMLElement, asset: FontAsset, char: string):
 
 const SIZE_PX = 600;
 
-function buildToggle(char: string, initial: Source, onChange: (next: Source) => void): HTMLElement {
+function buildToggle(
+  char: string,
+  initial: Source,
+  overrides: typeof FONT_REGISTRY[FontKey]["overrides"],
+  onChange: (next: Source) => void,
+): HTMLElement {
   const toggle = document.createElement("div");
   toggle.classList.add("inspector-toggle");
   for (const opt of ["baseline", "override", "both"] as const) {
@@ -91,7 +104,7 @@ function buildToggle(char: string, initial: Source, onChange: (next: Source) => 
     radio.name = "source";
     radio.value = opt;
     radio.checked = opt === initial;
-    radio.disabled = opt === "override" && !ANDIKA_OVERRIDES[char];
+    radio.disabled = opt === "override" && !overrides[char];
     radio.addEventListener("change", () => {
       if (radio.checked) onChange(opt);
     });
@@ -102,18 +115,30 @@ function buildToggle(char: string, initial: Source, onChange: (next: Source) => 
   return toggle;
 }
 
-function resolveSkeleton(char: string, source: Source): { skeleton: SkeletonPath; dots: SkeletonDot[] } {
-  if (source === "override" && ANDIKA_OVERRIDES[char]) {
-    const o = ANDIKA_OVERRIDES[char]!;
-    return { skeleton: dslToD(o), dots: o.dots ?? ANDIKA_BASELINE.dots[char] ?? [] };
+function resolveSkeleton(
+  char: string,
+  source: Source,
+  baseline: typeof FONT_REGISTRY[FontKey]["baseline"],
+  overrides: typeof FONT_REGISTRY[FontKey]["overrides"],
+): { skeleton: SkeletonPath; dots: SkeletonDot[] } {
+  if (source === "override" && overrides[char]) {
+    const o = overrides[char]!;
+    return { skeleton: dslToD(o), dots: o.dots ?? baseline.dots[char] ?? [] };
   }
   return {
-    skeleton: ANDIKA_BASELINE.skeletons[char] ?? "",
-    dots: ANDIKA_BASELINE.dots[char] ?? [],
+    skeleton: baseline.skeletons[char] ?? "",
+    dots: baseline.dots[char] ?? [],
   };
 }
 
-function renderSidebar(char: string, source: Source, asset: FontAsset): HTMLElement {
+function renderSidebar(
+  char: string,
+  source: Source,
+  asset: FontAsset,
+  fontLabel: string,
+  baseline: typeof FONT_REGISTRY[FontKey]["baseline"],
+  overrides: typeof FONT_REGISTRY[FontKey]["overrides"],
+): HTMLElement {
   const wrap = document.createElement("div");
   wrap.classList.add("inspector-sidebar-content");
 
@@ -124,7 +149,8 @@ function renderSidebar(char: string, source: Source, asset: FontAsset): HTMLElem
   const meta = document.createElement("dl");
   meta.classList.add("inspector-meta");
   const advance = asset.font.charToGlyph(char).advanceWidth ?? 0;
-  const hasOverride = ANDIKA_OVERRIDES[char] !== undefined;
+  const hasOverride = overrides[char] !== undefined;
+  appendDef(meta, "Font", fontLabel);
   appendDef(meta, "Advance width", `${advance.toFixed(1)} font units`);
   appendDef(meta, "Override?", hasOverride ? "yes" : "no (baseline only)");
   appendDef(meta, "Source shown", source);
@@ -137,9 +163,9 @@ function renderSidebar(char: string, source: Source, asset: FontAsset): HTMLElem
   const dsl = document.createElement("pre");
   dsl.classList.add("inspector-dsl");
   if (hasOverride) {
-    dsl.textContent = JSON.stringify(ANDIKA_OVERRIDES[char], null, 2);
+    dsl.textContent = JSON.stringify(overrides[char], null, 2);
   } else {
-    dsl.textContent = ANDIKA_BASELINE.skeletons[char] ?? "(no baseline)";
+    dsl.textContent = baseline.skeletons[char] ?? "(no baseline)";
   }
   wrap.appendChild(dsl);
 

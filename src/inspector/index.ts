@@ -1,5 +1,6 @@
 import type { FontAsset } from "../rendering/font";
 import { CHARS } from "./chars";
+import { type FontKey } from "./fonts";
 import { renderGridView } from "./grid";
 import { renderSingle } from "./single";
 
@@ -7,11 +8,12 @@ export interface InspectorOptions {
   target: string;
   root: HTMLElement;
   asset: FontAsset;
+  font: FontKey;
 }
 
 export function renderInspector(opts: InspectorOptions): void {
   if (opts.target === "*") {
-    renderGridView(opts.root, opts.asset);
+    renderGridView(opts.root, opts.asset, opts.font);
     return;
   }
 
@@ -28,7 +30,7 @@ export function renderInspector(opts: InspectorOptions): void {
       opts.root.appendChild(p);
       return;
     }
-    renderSingle(opts.root, opts.asset, char);
+    renderSingle(opts.root, opts.asset, char, opts.font);
     return;
   }
 
@@ -41,5 +43,5 @@ export function renderInspector(opts: InspectorOptions): void {
     opts.root.appendChild(p);
     return;
   }
-  renderGridView(opts.root, opts.asset, parts);
+  renderGridView(opts.root, opts.asset, opts.font, parts);
 }
