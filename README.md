@@ -121,4 +121,7 @@ This is a **commit-the-output** pipeline, not a CI-time step. Rerun only when th
 
 ## Font credit
 
-This app bundles **Andika** by SIL International, licensed under the **SIL Open Font License, Version 1.1**. See `public/OFL.txt` for the full license.
+This app bundles two fonts, both licensed under the **SIL Open Font License, Version 1.1**:
+
+- **Andika** by SIL International — see `public/andika-OFL.txt`. Used by the worksheet.
+- **Comic Relief** by the Comic Relief Project Authors — see `public/comic-relief-OFL.txt`. Available in the inspector for centerline comparison.
