@@ -1,6 +1,6 @@
 # Research: alternatives to Zhang-Suen for centerline extraction
 
-*Companion to `2026-04-23-baseline-algorithm-research-prompt.md`. Surveys candidate algorithms + libraries for extracting centerlines from Andika TTF glyphs, evaluates the top three, makes a recommendation with a code sketch, and flags dead ends. No implementation here.*
+*Surveys candidate algorithms + libraries for extracting centerlines from Andika TTF glyphs, evaluates the top three, makes a recommendation with a code sketch, and flags dead ends. No implementation here.*
 
 ---
 
