@@ -55,10 +55,12 @@ src/
   config/         SheetConfig types, content parsing, URL codec
   state/          Store<T> pub/sub
   rendering/      Font loading, glyph path extraction, ruled-line geometry
-  rendering/skeletons/   AUTO-GENERATED centerline data — do not edit by hand
+  rendering/skeletons/   Centerline data: <font>-baseline.ts (auto-generated, do not edit) +
+                         <font>-overrides.ts (per-glyph hand-authored DSL) merged via <font>.ts
   theming/        Theme data (colors + inline-SVG ornaments)
   layout/         Row and sheet composition
   ui/             Form binding, preview render, app entry
+  inspector/      ?inspect=<char> / ?inspect=* dev route for previewing centerlines
   styles/         Screen CSS + @page print CSS
   assets/
 public/           Static assets served as-is (Andika TTF, OFL license)
