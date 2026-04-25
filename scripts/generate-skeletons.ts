@@ -6,13 +6,17 @@
  * polylines (simplify-js), and writes a TypeScript module exporting a
  * `SkeletonSet` for use at runtime.
  *
- * Usage:
- *   npm run generate:skeletons -- \
+ * Usage (direct):
+ *   npx tsx scripts/generate-skeletons.ts \
  *     --font public/andika.ttf \
- *     --output src/rendering/skeletons/andika.ts \
+ *     --output src/rendering/skeletons/andika-baseline.ts \
  *     [--chars "ABC…"] \
  *     [--raster-size 512] \
  *     [--simplify-tolerance 1.5]
+ *
+ * Or via the per-font npm scripts:
+ *   npm run generate:skeletons:andika
+ *   npm run generate:skeletons:comic-relief
  */
 
 import { readFileSync, writeFileSync } from "node:fs";

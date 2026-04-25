@@ -55,10 +55,12 @@ src/
   config/         SheetConfig types, content parsing, URL codec
   state/          Store<T> pub/sub
   rendering/      Font loading, glyph path extraction, ruled-line geometry
-  rendering/skeletons/   AUTO-GENERATED centerline data — do not edit by hand
+  rendering/skeletons/   Centerline data: <font>-baseline.ts (auto-generated, do not edit) +
+                         <font>-overrides.ts (per-glyph hand-authored DSL) merged via <font>.ts
   theming/        Theme data (colors + inline-SVG ornaments)
   layout/         Row and sheet composition
   ui/             Form binding, preview render, app entry
+  inspector/      ?inspect=<char> / ?inspect=* dev route for previewing centerlines
   styles/         Screen CSS + @page print CSS
   assets/
 public/           Static assets served as-is (Andika TTF, OFL license)
@@ -94,7 +96,8 @@ Pipeline (`scripts/generate-skeletons.ts`):
 Regenerate on demand:
 
 ```bash
-npm run generate:skeletons
+npm run generate:skeletons:andika         # worksheet font
+npm run generate:skeletons:comic-relief   # inspector-only comparison font
 ```
 
 This is a **commit-the-output** pipeline, not a CI-time step. Rerun only when the font is updated or the tuning (raster size, RDP tolerance, spur thresholds) changes.
@@ -105,7 +108,7 @@ This is a **commit-the-output** pipeline, not a CI-time step. Rerun only when th
 
 **Add a starter preset.** Add a `{key, label, config}` entry to `PRESETS` in `src/config/presets.ts`. The form dropdown and `presetByKey` lookup pick it up automatically. TypeScript ensures the `config` field stays in sync with `SheetConfig`.
 
-**Add a new font.** Place the TTF in `public/`, point `generate-skeletons` at it (or add a second `generate:skeletons:<name>` script), generate into a new `src/rendering/skeletons/<name>.ts`. Teach `row.ts` to select the right skeleton set based on current font. Update `@font-face` in `src/styles/main.css`.
+**Add a new font.** Place the TTF in `public/`, add a `generate:skeletons:<name>` script pointing at it (see the Andika / Comic Relief entries as templates), generate `<name>-baseline.ts` (plus a `<name>-overrides.ts` and merge entry `<name>.ts` mirroring the Andika layout). Teach `row.ts` to select the right skeleton set based on current font. Update `@font-face` in `src/styles/main.css`.
 
 ## Scripts
 
@@ -116,9 +119,13 @@ This is a **commit-the-output** pipeline, not a CI-time step. Rerun only when th
 - `npm run test:watch` — unit tests, watch mode
 - `npm run test:e2e` — Playwright visual regression
 - `npm run test:e2e:update` — regenerate visual snapshots
-- `npm run generate:skeletons` — regenerate centerline skeletons from the bundled font
+- `npm run generate:skeletons:andika` — regenerate Andika centerline skeletons (worksheet font)
+- `npm run generate:skeletons:comic-relief` — regenerate Comic Relief centerline skeletons (inspector comparison)
 - `npm run generate:og` — regenerate `public/og.png` from the live dev server (run `npm run dev` first)
 
 ## Font credit
 
-This app bundles **Andika** by SIL International, licensed under the **SIL Open Font License, Version 1.1**. See `public/OFL.txt` for the full license.
+This app bundles two fonts, both licensed under the **SIL Open Font License, Version 1.1**:
+
+- **Andika** by SIL International — see `public/andika-OFL.txt`. Used by the worksheet.
+- **Comic Relief** by the Comic Relief Project Authors — see `public/comic-relief-OFL.txt`. Available in the inspector for centerline comparison.

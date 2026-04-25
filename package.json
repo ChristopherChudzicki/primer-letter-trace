@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
-    "generate:skeletons": "tsx scripts/generate-skeletons.ts --font public/andika.ttf --output src/rendering/skeletons/andika.ts",
+    "generate:skeletons:andika": "tsx scripts/generate-skeletons.ts --font public/andika.ttf --output src/rendering/skeletons/andika-baseline.ts --raster-size 1024 --simplify-tolerance 0.5",
+    "generate:skeletons:comic-relief": "tsx scripts/generate-skeletons.ts --font public/comic-relief.ttf --output src/rendering/skeletons/comic-relief-baseline.ts --raster-size 1024 --simplify-tolerance 0.5",
     "generate:og": "tsx scripts/generate-og.ts"
   },
   "keywords": [],
